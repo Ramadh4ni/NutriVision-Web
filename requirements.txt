@@ -1,7 +1,9 @@
 numpy
 pandas
-tensorflow
+matplotlib
+seaborn
+scikit-learn
+jupyter
 opencv-python
-fastapi
-uvicorn
-python-multipart
+pillow
+tqdm
