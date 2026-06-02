@@ -1,0 +1,11 @@
+Analisis nutrisi dari bahan berikut:
+{ingredients}
+
+Berikan:
+- Kalori total
+- Protein
+- Karbohidrat
+- Lemak
+
+Gunakan estimasi realistis makanan Indonesia.
+Jawab dalam format JSON saja.

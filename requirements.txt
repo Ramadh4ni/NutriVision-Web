@@ -7,3 +7,17 @@ jupyter
 opencv-python
 pillow
 tqdm
+fastapi
+uvicorn
+python-dotenv
+google-generativeai
+pydantic
+protobuf==3.20.3
+fastapi
+uvicorn
+tensorflow
+numpy
+pillow
+python-dotenv
+google-generativeai
+protobuf==3.20.3

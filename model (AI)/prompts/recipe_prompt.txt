@@ -1,0 +1,37 @@
+Dari bahan makanan berikut:
+{ingredients}
+
+TUGAS:
+Buat tepat 8 resep makanan sehat yang berbeda.
+
+WAJIB IKUTI ATURAN INI:
+- Output hanya JSON valid
+- Tidak boleh ada teks selain JSON
+- Harus tepat 8 resep
+- Semua resep harus berbeda
+- Gunakan bahan yang realistis dari input
+
+FORMAT OUTPUT WAJIB:
+
+{
+  "recipes": [
+    {
+      "title": "nama resep",
+      "description": "deskripsi singkat",
+      "ingredients": ["bahan1", "bahan2"],
+      "instructions": ["langkah 1", "langkah 2"],
+      "tags": ["sehat", "tinggi-protein"],
+      "nutrition": {
+        "calories": 0,
+        "protein": 0,
+        "carbs": 0,
+        "fat": 0
+      }
+    }
+  ]
+}
+
+CATATAN:
+- Nutrisi hanya estimasi
+- Gunakan gaya makanan sehat
+- Fokus makanan rumahan
