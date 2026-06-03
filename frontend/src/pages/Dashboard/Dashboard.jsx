@@ -5,12 +5,11 @@ import DashboardLayout from "../../layouts/DashboardLayout";
 import ScanFoodModal from "../../components/scan/ScanFoodModal";
 import LastScanResult from "../../components/scan/LastScanResult";
 import { useRecipe } from "../../context/RecipeContext";
-import { useAuth } from "../../context/AuthContext";
+import { recipes } from "../../data/recipes";
 
 function formatRelativeTime(timestamp) {
   if (!timestamp) return "";
-  const time = typeof timestamp === "number" ? timestamp : new Date(timestamp).getTime();
-  const diff = Date.now() - time;
+  const diff = Date.now() - timestamp;
   const mins = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
@@ -23,21 +22,20 @@ function formatRelativeTime(timestamp) {
 export default function Dashboard() {
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
   const navigate = useNavigate();
-  const { dashboard } = useAuth();
-  const { recipes } = useRecipe();
+  const { history } = useRecipe();
 
-  const recentActivities = recipes.slice(0, 4);
+  const recentActivities = Object.values(history)
+    .filter((entry) => entry && typeof entry === "object" && entry.recipeId)
+    .sort((a, b) => (b?.lastActivity || 0) - (a?.lastActivity || 0))
+    .slice(0, 4);
 
-  const handleActivityClick = (recipeId) => {
-    navigate(`/recipe/${recipeId}`);
+  const handleActivityClick = (entry) => {
+    navigate(`/recipe/${entry.recipeId}`);
   };
-  const estimatedCalories =
-    dashboard?.nutritionTarget?.estimatedDailyCalories || null;
-  const stats = dashboard?.stats || {
-    totalRecipesGenerated: recipes.length,
-    totalFavorites: recipes.filter((recipe) => recipe.isSaved).length,
-    totalCooked: recipes.filter((recipe) => recipe.isCompleted).length,
-  };
+
+  const handleGalleryClick = () => {};
+  const handleCameraClick = () => {};
+  // Scan modal handles its own queue. onStartScan is called when "Start Scan" is clicked.
 
   return (
     <DashboardLayout>
@@ -103,7 +101,7 @@ export default function Dashboard() {
               style={{ borderColor: "#F1F5F9" }}
             >
               <button
-                onClick={() => navigate("/recipe-history")}
+                onClick={() => navigate("/recipes")}
                 className="flex items-center gap-1 text-sm font-semibold"
                 style={{ color: "#15803D" }}
               >
@@ -126,39 +124,6 @@ export default function Dashboard() {
           <LastScanResult onScanAgain={() => setIsScanModalOpen(true)} />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            {
-              label: "Daily Calories",
-              value: estimatedCalories ? `${estimatedCalories} kcal` : "Pending",
-            },
-            {
-              label: "Recipes Generated",
-              value: stats.totalRecipesGenerated,
-            },
-            {
-              label: "Favorites / Cooked",
-              value: `${stats.totalFavorites} / ${stats.totalCooked}`,
-            },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="rounded-2xl p-5"
-              style={{
-                backgroundColor: "#FFFFFF",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
-              }}
-            >
-              <p className="text-xs font-semibold tracking-wider mb-2" style={{ color: "#94A3B8" }}>
-                {item.label.toUpperCase()}
-              </p>
-              <p className="text-2xl font-bold" style={{ color: "#1E293B" }}>
-                {item.value}
-              </p>
-            </div>
-          ))}
-        </div>
-
         <div className="space-y-3">
           <div className="flex items-center justify-between px-1 py-2">
             <h2
@@ -168,7 +133,7 @@ export default function Dashboard() {
               RECENT ACTIVITY
             </h2>
             <button
-              onClick={() => navigate("/recipe-history")}
+              onClick={() => navigate("/recipes")}
               className="flex items-center gap-1 text-xs font-medium tracking-wide"
               style={{ color: "#15803D" }}
             >
@@ -201,7 +166,7 @@ export default function Dashboard() {
                 Start exploring recipes to see your activity here.
               </p>
               <button
-                onClick={() => navigate("/recipe-history")}
+                onClick={() => navigate("/recipes")}
                 className="px-5 py-2.5 rounded-full text-xs font-semibold text-white"
                 style={{ backgroundColor: "#006D37" }}
               >
@@ -209,12 +174,14 @@ export default function Dashboard() {
               </button>
             </div>
           ) : (
-            recentActivities.map((recipe) => {
-              const isCompleted = !!recipe.isCompleted;
+            recentActivities.map((entry) => {
+              const recipe = recipes.find((r) => r.id === entry.recipeId);
+              if (!recipe) return null;
+              const isCompleted = !!history[recipe.id]?.isCompleted;
               return (
                 <div
-                  key={recipe.id}
-                  onClick={() => handleActivityClick(recipe.id)}
+                  key={entry.recipeId}
+                  onClick={() => handleActivityClick(entry)}
                   className="flex flex-wrap items-center justify-between gap-4 px-4 md:px-5 py-4 rounded-2xl cursor-pointer transition-all hover:opacity-90"
                   style={{
                     backgroundColor: "#FFFFFF",
@@ -242,7 +209,7 @@ export default function Dashboard() {
                         className="text-xs mt-0.5"
                         style={{ color: "#94A3B8" }}
                       >
-                        {formatRelativeTime(recipe.updatedAt || recipe.createdAt)}
+                        {formatRelativeTime(entry.lastActivity)}
                       </p>
                     </div>
                   </div>

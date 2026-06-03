@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Camera, Shield } from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { useUser } from "../../context/UserContext";
@@ -9,149 +9,57 @@ const DEFAULT_AVATAR =
   "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const GENDER_OPTIONS = ["male", "female", "other"];
-const GOAL_OPTIONS = ["cutting", "maintenance", "bulking"];
-const ACTIVITY_OPTIONS = ["sedentary", "moderate", "active"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-function titleCase(value) {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
+const GENDER_OPTIONS = ["Male", "Female", "Other"];
 
 export default function Settings() {
-  const { profile, profileImage, updateProfile, updateProfileImage } = useUser();
-  const { currentUser, updateActiveProfile, updateUserPassword } = useAuth();
+  const { profile, updateProfile } = useUser();
+  const { updateActiveProfile, updateActiveProfileImage, getActiveUser, updateUserPassword } = useAuth();
   const { addToast } = useToast();
   const fileInputRef = useRef(null);
-  const avatarSrc = profileImage || DEFAULT_AVATAR;
 
+  // Get avatar from auth (source of truth) — falls back to stored or default
+  const avatarSrc = getActiveUser()?.profileImage || DEFAULT_AVATAR;
+
+  // Single source of truth: initialize from profile (set once on mount, NOT reactive)
   const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    age: "",
-    gender: "male",
-    weight: "",
-    height: "",
-    goal: "maintenance",
-    activityLevel: "moderate",
+    fullName: profile?.fullName || "",
+    email: profile?.email || "",
+    age: profile?.age || "",
+    gender: profile?.gender || "Male",
+    weight: profile?.weight || "",
+    height: profile?.height || "",
   });
+
   const [saving, setSaving] = useState(false);
+
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
+
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
-  useEffect(() => {
-    setFormData({
-      fullName: profile?.fullName || currentUser?.fullName || "",
-      email: profile?.email || currentUser?.email || "",
-      age: profile?.age || "",
-      gender: profile?.gender || "male",
-      weight: profile?.weight || "",
-      height: profile?.height || "",
-      goal: profile?.goal || "maintenance",
-      activityLevel: profile?.activityLevel || "moderate",
-    });
-  }, [currentUser?.email, currentUser?.fullName, profile]);
-
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handlePasswordChange = (e) => {
+    setPasswordForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handlePasswordChange = (event) => {
-    const { name, value } = event.target;
-    setPasswordForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      addToast("Unsupported image format.", "warning");
-      event.target.value = "";
-      return;
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      addToast("Image is too large. Maximum size is 5MB.", "warning");
-      event.target.value = "";
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      updateProfileImage(reader.result);
-      addToast(
-        "Profile photo is updated locally. Backend avatar upload is not available yet.",
-        "success"
-      );
-    };
-    reader.onerror = () => {
-      addToast("Failed to read image file.", "warning");
-    };
-    reader.readAsDataURL(file);
-    event.target.value = "";
-  };
-
-  const validateProfile = () => {
-    if (!formData.age) return "Age is required.";
-    if (!formData.weight) return "Weight is required.";
-    if (!formData.height) return "Height is required.";
-    if (!GENDER_OPTIONS.includes(formData.gender)) return "Select a valid gender.";
-    if (!GOAL_OPTIONS.includes(formData.goal)) return "Select a valid goal.";
-    if (!ACTIVITY_OPTIONS.includes(formData.activityLevel)) {
-      return "Select a valid activity level.";
-    }
-    return null;
-  };
-
-  const handleSaveChanges = async (event) => {
-    event.preventDefault();
-    const error = validateProfile();
-
-    if (error) {
-      addToast(error, "warning");
-      return;
-    }
-
-    setSaving(true);
-
-    try {
-      await updateActiveProfile({
-        age: formData.age,
-        gender: formData.gender,
-        weight: formData.weight,
-        height: formData.height,
-        goal: formData.goal,
-        activityLevel: formData.activityLevel,
-      });
-      updateProfile(formData);
-      addToast("Profile saved successfully.", "success");
-    } catch (apiError) {
-      addToast(apiError.payload?.message || apiError.message, "warning");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleUpdatePassword = async (event) => {
-    event.preventDefault();
+  const handleUpdatePassword = (e) => {
+    e.preventDefault();
     const { currentPassword, newPassword, confirmPassword } = passwordForm;
 
     if (!currentPassword) {
       addToast("Please enter your current password.", "warning");
       return;
     }
-    if (!newPassword || newPassword.length < 8) {
-      addToast("New password must be at least 8 characters.", "warning");
+    if (!newPassword) {
+      addToast("Please enter a new password.", "warning");
+      return;
+    }
+    if (newPassword.length < 8) {
+      addToast("Password must be at least 8 characters.", "warning");
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -160,25 +68,114 @@ export default function Settings() {
     }
 
     setUpdatingPassword(true);
-    const result = await updateUserPassword(currentPassword, newPassword);
+    const result = updateUserPassword(currentPassword, newPassword);
     setUpdatingPassword(false);
 
-    if (!result.success) {
+    if (result.success) {
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      addToast("Password updated successfully.", "success");
+    } else {
       addToast(result.error, "warning");
+    }
+  };
+
+  const handleInputChange = useCallback((e) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }, []);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      addToast("Unsupported image format.", "warning");
+      e.target.value = "";
       return;
     }
 
-    setPasswordForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
-    addToast("Password updated successfully.", "success");
+    if (file.size > MAX_FILE_SIZE) {
+      addToast("Image is too large. Maximum size is 5MB.", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      try {
+        updateActiveProfileImage(reader.result);
+        addToast("Profile photo updated.", "success");
+      } catch (err) {
+        if (err.name === 'QuotaExceededError') {
+          addToast("Unable to save image. Storage limit exceeded.", "warning");
+        } else {
+          addToast("Failed to save profile photo.", "warning");
+        }
+      }
+    };
+    reader.onerror = () => {
+      addToast("Failed to read image file.", "warning");
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const validate = (data) => {
+    if (!data.fullName?.trim()) return "Full name is required.";
+    if (!data.email?.trim()) return "Email address is required.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
+      return "Please enter a valid email address.";
+    if (!data.age) return "Age is required.";
+    const ageNum = Number(data.age);
+    if (isNaN(ageNum) || ageNum < 1 || ageNum > 150)
+      return "Please enter a valid age (1–150).";
+    if (!data.gender || !GENDER_OPTIONS.includes(data.gender))
+      return "Please select a gender.";
+    if (!data.weight) return "Weight is required.";
+    const weightNum = Number(data.weight);
+    if (isNaN(weightNum) || weightNum < 1)
+      return "Please enter a valid weight.";
+    if (!data.height) return "Height is required.";
+    const heightNum = Number(data.height);
+    if (isNaN(heightNum) || heightNum < 1)
+      return "Please enter a valid height.";
+    return null;
+  };
+
+  const handleSaveChanges = (e) => {
+    e.preventDefault();
+    const error = validate(formData);
+    if (error) {
+      addToast(error, "warning");
+      return;
+    }
+    setSaving(true);
+    const profileData = {
+      fullName: formData.fullName.trim(),
+      email: formData.email.trim(),
+      age: String(formData.age),
+      gender: formData.gender,
+      weight: String(formData.weight),
+      height: String(formData.height),
+    };
+    // Only update AuthContext — the single source of truth for persistence
+    updateActiveProfile(profileData);
+    // Also update UserContext so navbar reacts immediately
+    updateProfile(profileData);
+    addToast("Profile saved successfully.", "success");
+    setSaving(false);
   };
 
   return (
     <DashboardLayout>
-      <div className="px-1 sm:px-2 lg:px-3 py-1" style={{ fontFamily: "Inter, sans-serif" }}>
+      <div
+        className="px-1 sm:px-2 lg:px-3 py-1"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
+        {/* Page Header */}
         <div className="mb-5">
           <h1
             style={{
@@ -199,10 +196,11 @@ export default function Settings() {
               marginTop: "8px",
             }}
           >
-            Manage your biometrics, goals, activity level, and password.
+            Fine-tune your NutriVision experience and health connectivity.
           </p>
         </div>
 
+        {/* Profile Card */}
         <div
           className="bg-white"
           style={{
@@ -212,6 +210,7 @@ export default function Settings() {
           }}
         >
           <div className="flex flex-col md:flex-row gap-4 items-start">
+            {/* Avatar Section */}
             <div className="flex-shrink-0 mx-auto md:mx-0">
               <div className="relative">
                 <img
@@ -244,52 +243,69 @@ export default function Settings() {
               </div>
             </div>
 
+            {/* Form Fields */}
             <div className="flex-1 w-full">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+                {/* Full Name */}
                 <div>
-                  <label className="block mb-1.5" style={{ color: "#64748B", fontSize: "13px", fontWeight: "500" }}>
+                  <label
+                    className="block mb-1.5"
+                    style={{ color: "#64748B", fontSize: "13px", fontWeight: "500", fontFamily: "Inter, sans-serif" }}
+                  >
                     Full Name
                   </label>
                   <input
                     type="text"
                     name="fullName"
                     value={formData.fullName}
-                    disabled
+                    onChange={handleInputChange}
                     className="w-full px-3 py-2.5 text-sm"
-                    style={{ backgroundColor: "#F1F5F9", border: "none", color: "#64748B" }}
+                    style={{ backgroundColor: "#E1E3E4", border: "none", borderRadius: "0", color: "#1E293B" }}
                   />
                 </div>
 
+                {/* Email */}
                 <div>
-                  <label className="block mb-1.5" style={{ color: "#64748B", fontSize: "13px", fontWeight: "500" }}>
+                  <label
+                    className="block mb-1.5"
+                    style={{ color: "#64748B", fontSize: "13px", fontWeight: "500", fontFamily: "Inter, sans-serif" }}
+                  >
                     Email Address
                   </label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
-                    disabled
+                    onChange={handleInputChange}
                     className="w-full px-3 py-2.5 text-sm"
-                    style={{ backgroundColor: "#F1F5F9", border: "none", color: "#64748B" }}
+                    style={{ backgroundColor: "#E1E3E4", border: "none", borderRadius: "0", color: "#1E293B" }}
                   />
                 </div>
 
+                {/* Age */}
                 <div>
-                  <label className="block mb-1.5" style={{ color: "#64748B", fontSize: "13px", fontWeight: "500" }}>
+                  <label
+                    className="block mb-1.5"
+                    style={{ color: "#64748B", fontSize: "13px", fontWeight: "500", fontFamily: "Inter, sans-serif" }}
+                  >
                     Age
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="age"
                     value={formData.age}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2.5 text-sm"
-                    style={{ backgroundColor: "#E1E3E4", border: "none", color: "#1E293B" }}
+                    style={{ backgroundColor: "#E1E3E4", border: "none", borderRadius: "0", color: "#1E293B" }}
                   />
                 </div>
 
+                {/* Gender */}
                 <div>
-                  <label className="block mb-1.5" style={{ color: "#64748B", fontSize: "13px", fontWeight: "500" }}>
+                  <label
+                    className="block mb-1.5"
+                    style={{ color: "#64748B", fontSize: "13px", fontWeight: "500", fontFamily: "Inter, sans-serif" }}
+                  >
                     Gender
                   </label>
                   <select
@@ -297,90 +313,52 @@ export default function Settings() {
                     value={formData.gender}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2.5 text-sm"
-                    style={{ backgroundColor: "#E1E3E4", border: "none", color: "#1E293B" }}
+                    style={{ backgroundColor: "#E1E3E4", border: "none", borderRadius: "0", color: "#1E293B" }}
                   >
-                    {GENDER_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {titleCase(option)}
-                      </option>
-                    ))}
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
 
+                {/* Weight */}
                 <div>
-                  <label className="block mb-1.5" style={{ color: "#64748B", fontSize: "13px", fontWeight: "500" }}>
+                  <label
+                    className="block mb-1.5"
+                    style={{ color: "#64748B", fontSize: "13px", fontWeight: "500", fontFamily: "Inter, sans-serif" }}
+                  >
                     Weight (kg)
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="weight"
                     value={formData.weight}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2.5 text-sm"
-                    style={{ backgroundColor: "#E1E3E4", border: "none", color: "#1E293B" }}
+                    style={{ backgroundColor: "#E1E3E4", border: "none", borderRadius: "0", color: "#1E293B" }}
                   />
                 </div>
 
+                {/* Height */}
                 <div>
-                  <label className="block mb-1.5" style={{ color: "#64748B", fontSize: "13px", fontWeight: "500" }}>
+                  <label
+                    className="block mb-1.5"
+                    style={{ color: "#64748B", fontSize: "13px", fontWeight: "500", fontFamily: "Inter, sans-serif" }}
+                  >
                     Height (cm)
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="height"
                     value={formData.height}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2.5 text-sm"
-                    style={{ backgroundColor: "#E1E3E4", border: "none", color: "#1E293B" }}
+                    style={{ backgroundColor: "#E1E3E4", border: "none", borderRadius: "0", color: "#1E293B" }}
                   />
                 </div>
-
-                <div>
-                  <label className="block mb-1.5" style={{ color: "#64748B", fontSize: "13px", fontWeight: "500" }}>
-                    Goal
-                  </label>
-                  <select
-                    name="goal"
-                    value={formData.goal}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2.5 text-sm"
-                    style={{ backgroundColor: "#E1E3E4", border: "none", color: "#1E293B" }}
-                  >
-                    {GOAL_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {titleCase(option)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block mb-1.5" style={{ color: "#64748B", fontSize: "13px", fontWeight: "500" }}>
-                    Activity Level
-                  </label>
-                  <select
-                    name="activityLevel"
-                    value={formData.activityLevel}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2.5 text-sm"
-                    style={{ backgroundColor: "#E1E3E4", border: "none", color: "#1E293B" }}
-                  >
-                    {ACTIVITY_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {titleCase(option)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
-              <div className="mt-3">
-                <p className="text-xs" style={{ color: "#94A3B8" }}>
-                  Name and email are currently read-only because the backend only exposes biometrics,
-                  goal, and activity updates in this release.
-                </p>
-              </div>
-
+              {/* Save Button */}
               <div className="mt-4">
                 <button
                   type="button"
@@ -396,6 +374,7 @@ export default function Settings() {
           </div>
         </div>
 
+        {/* Security Card */}
         <div
           className="bg-white"
           style={{ borderRadius: "24px", boxShadow: "0 6px 24px rgba(0,0,0,0.06)", padding: "32px", marginTop: "32px" }}
@@ -414,7 +393,10 @@ export default function Settings() {
 
           <div className="space-y-4">
             <div>
-              <label className="block mb-1.5" style={{ color: "#64748B", fontSize: "13px", fontWeight: "500" }}>
+              <label
+                className="block mb-1.5"
+                style={{ color: "#64748B", fontSize: "13px", fontWeight: "500", fontFamily: "Inter, sans-serif" }}
+              >
                 Current Password
               </label>
               <input
@@ -424,13 +406,16 @@ export default function Settings() {
                 value={passwordForm.currentPassword}
                 onChange={handlePasswordChange}
                 className="w-full px-3 py-2.5 text-sm placeholder-gray-400"
-                style={{ backgroundColor: "#E1E3E4", border: "none", color: "#1E293B" }}
+                style={{ backgroundColor: "#E1E3E4", border: "none", borderRadius: "0", color: "#1E293B" }}
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1.5" style={{ color: "#64748B", fontSize: "13px", fontWeight: "500" }}>
+                <label
+                  className="block mb-1.5"
+                  style={{ color: "#64748B", fontSize: "13px", fontWeight: "500", fontFamily: "Inter, sans-serif" }}
+                >
                   New Password
                 </label>
                 <input
@@ -440,11 +425,14 @@ export default function Settings() {
                   value={passwordForm.newPassword}
                   onChange={handlePasswordChange}
                   className="w-full px-3 py-2.5 text-sm placeholder-gray-400"
-                  style={{ backgroundColor: "#E1E3E4", border: "none", color: "#1E293B" }}
+                  style={{ backgroundColor: "#E1E3E4", border: "none", borderRadius: "0", color: "#1E293B" }}
                 />
               </div>
               <div>
-                <label className="block mb-1.5" style={{ color: "#64748B", fontSize: "13px", fontWeight: "500" }}>
+                <label
+                  className="block mb-1.5"
+                  style={{ color: "#64748B", fontSize: "13px", fontWeight: "500", fontFamily: "Inter, sans-serif" }}
+                >
                   Confirm Password
                 </label>
                 <input
@@ -454,7 +442,7 @@ export default function Settings() {
                   value={passwordForm.confirmPassword}
                   onChange={handlePasswordChange}
                   className="w-full px-3 py-2.5 text-sm placeholder-gray-400"
-                  style={{ backgroundColor: "#E1E3E4", border: "none", color: "#1E293B" }}
+                  style={{ backgroundColor: "#E1E3E4", border: "none", borderRadius: "0", color: "#1E293B" }}
                 />
               </div>
             </div>

@@ -11,9 +11,8 @@ import Register from "./pages/Auth/Register";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import ScanFood from "./pages/ScanFood/ScanFood";
 import Recommendation from "./pages/Recommendation/Recommendation";
-import RecipeGuide from "./pages/RecipeGuide/RecipeGuide";
+import Recipe from "./pages/Recipe/Recipe";
 import RecipeDetail from "./pages/Recipe/RecipeDetail";
-import RecipeHistory from "./pages/Recipe/RecipeHistory";
 import Settings from "./pages/Settings/Settings";
 import Onboarding from "./pages/Onboarding/Onboarding";
 import { RecipeProvider } from "./context/RecipeContext";
@@ -21,52 +20,52 @@ import { UserProvider, useUser } from "./context/UserContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 function ProtectedRoute({ children }) {
-  const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
-  if (isLoading) {
-    return null;
-  }
-  if (!isAuthenticated) {
+  const { isAuthenticated, activeUserId, users } = useAuth();
+  if (!isAuthenticated || !activeUserId) {
     return <Navigate to="/login" replace />;
   }
-  if (!hasCompletedOnboarding) {
+  if (!users[activeUserId]?.hasCompletedOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
   return children;
 }
 
 function GuestRoute({ children }) {
-  const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
-  if (isLoading) {
-    return null;
-  }
+  const { isAuthenticated } = useAuth();
   if (isAuthenticated) {
-    return <Navigate to={hasCompletedOnboarding ? "/dashboard" : "/onboarding"} replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   return children;
 }
 
 function OnboardingRoute({ children }) {
-  const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
-  if (isLoading) {
-    return null;
-  }
-  if (isAuthenticated && hasCompletedOnboarding) {
+  const { isAuthenticated, activeUserId, users } = useAuth();
+  if (
+    isAuthenticated &&
+    activeUserId &&
+    users[activeUserId]?.hasCompletedOnboarding
+  ) {
     return <Navigate to="/dashboard" replace />;
   }
   return children;
 }
 
 function AuthHydrator() {
-  const { profile, isAuthenticated } = useAuth();
+  const { isAuthenticated, activeUserId, users } = useAuth();
   const { hydrateFromAuth } = useUser();
-  const prevProfile = useRef(null);
+  const prevUserId = useRef(null);
 
   useEffect(() => {
-    if (prevProfile.current !== profile) {
-      prevProfile.current = profile;
-      hydrateFromAuth(isAuthenticated ? profile : null);
+    if (prevUserId.current !== activeUserId) {
+      prevUserId.current = activeUserId;
+
+      if (isAuthenticated && activeUserId) {
+        hydrateFromAuth(users[activeUserId] || null);
+      } else {
+        hydrateFromAuth(null);
+      }
     }
-  }, [isAuthenticated, profile, hydrateFromAuth]);
+  }, [isAuthenticated, activeUserId, users, hydrateFromAuth]);
 
   return null;
 }
@@ -121,14 +120,6 @@ function App() {
                 }
               />
               <Route
-                path="/recipe-guide"
-                element={
-                  <ProtectedRoute>
-                    <RecipeGuide />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/recommendation"
                 element={
                   <ProtectedRoute>
@@ -137,10 +128,10 @@ function App() {
                 }
               />
               <Route
-                path="/recipe-history"
+                path="/recipes"
                 element={
                   <ProtectedRoute>
-                    <RecipeHistory />
+                    <Recipe />
                   </ProtectedRoute>
                 }
               />

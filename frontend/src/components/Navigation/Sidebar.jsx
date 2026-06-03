@@ -3,7 +3,6 @@ import {
   Home,
   Camera,
   BookOpen,
-  History,
   Settings,
 } from 'lucide-react';
 import logo from '../../assets/icons/Nutrivision-logo.png';
@@ -14,8 +13,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   const menuItems = [
     { name: 'Dashboard', icon: Home, path: '/dashboard' },
     { name: 'Scan Food', icon: Camera, path: '/scan-food' },
-    { name: 'Recipe Guide', icon: BookOpen, path: '/recipe-guide' },
-    { name: 'Recipe History', icon: History, path: '/recipe-history' },
+    { name: 'Recipe', icon: BookOpen, path: '/recipes' },
     { name: 'Settings', icon: Settings, path: '/settings' },
   ];
 

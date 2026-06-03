@@ -22,7 +22,7 @@ export default function ScanFoodModal({
   const [queuedItems, setQueuedItems] = useState([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const navigate = useNavigate();
-  const { runScan, scanLoading } = useScan();
+  const { saveScan } = useScan();
 
   // Camera capture: add to queue without closing modal or navigating
   const handleCapture = useCallback((dataUrl) => {
@@ -78,16 +78,21 @@ export default function ScanFoodModal({
     setQueuedItems([]);
   }, [queuedItems]);
 
-  const handleStartScan = useCallback(async () => {
+  const handleStartScan = useCallback(() => {
     if (queuedItems.length === 0) return;
-    const files = queuedItems.map((item) => item.file);
-    const result = await runScan(files);
-    if (!result.success) return;
-
+    saveScan({
+      id: `scan-${Date.now()}`,
+      thumbnail: queuedItems[0].previewUrl,
+      thumbnails: queuedItems.map((i) => i.previewUrl),
+      foodName: queuedItems[0].name,
+      photoCount: queuedItems.length,
+      ingredients: [],
+      timestamp: 'Just now',
+    });
     setQueuedItems([]);
     onClose();
     navigate('/recommendation');
-  }, [navigate, onClose, queuedItems, runScan]);
+  }, [queuedItems, saveScan, onClose, navigate]);
 
   const handleCameraClick = useCallback(() => {
     setIsCameraOpen(true);
@@ -239,11 +244,11 @@ export default function ScanFoodModal({
               <div className="mt-4 pt-4" style={{ borderTop: '1px solid #F1F5F9' }}>
                 <button
                   onClick={handleStartScan}
-                  disabled={queuedItems.length === 0 || scanLoading}
+                  disabled={queuedItems.length === 0}
                   className="w-full py-3.5 rounded-full text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ background: 'linear-gradient(to right, #005A2C, #006D37)', boxShadow: '0 4px 14px rgba(0, 109, 55, 0.25)' }}
                 >
-                  {scanLoading ? 'Scanning...' : 'Start Scan →'}
+                  Start Scan &rarr;
                 </button>
               </div>
             </div>

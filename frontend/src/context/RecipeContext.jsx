@@ -1,163 +1,199 @@
 import {
   createContext,
-  useCallback,
   useContext,
-  useEffect,
-  useMemo,
   useState,
+  useEffect,
+  useCallback,
 } from "react";
-import {
-  getRecipeHistory,
-  mapRecipeFromApi,
-  markRecipeCooked,
-  recommendRecipes,
-  saveRecipe,
-  unsaveRecipe,
-} from "../lib/api";
 import { useAuth } from "./AuthContext";
 
 const RecipeContext = createContext(null);
 
+const RECIPE_STATUS_KEY = "nutrivision_recipe_status";
+
+function safeParse(value, fallback) {
+  if (value === null || value === undefined) return fallback;
+  try {
+    return JSON.parse(value);
+  } catch {
+    console.warn(
+      "[RecipeContext] Corrupted localStorage data — resetting to default.",
+    );
+    return fallback;
+  }
+}
+
+function migrateEntry(recipeId, entry) {
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+    return {
+      recipeId,
+      isSaved: false,
+      isCompleted: false,
+      lastActivity: 0,
+    };
+  }
+  return {
+    recipeId,
+    isSaved: false,
+    isCompleted: false,
+    lastActivity: 0,
+    ...entry,
+  };
+}
+
+function isValidEntry(entry) {
+  return (
+    entry &&
+    typeof entry === "object" &&
+    !Array.isArray(entry) &&
+    "recipeId" in entry
+  );
+}
+
+function loadStatus(userId) {
+  try {
+    const raw = localStorage.getItem(RECIPE_STATUS_KEY);
+    const byUser = safeParse(raw, {});
+    const userEntries = byUser[userId] || {};
+    const migrated = {};
+    let dirty = false;
+    for (const [id, entry] of Object.entries(userEntries)) {
+      const valid = migrateEntry(id, entry);
+      migrated[id] = valid;
+      if (!isValidEntry(valid) || entry !== valid) dirty = true;
+    }
+    const result = { ...migrated };
+    // Rewrite localStorage to clean up bad entries on next save
+    if (dirty) {
+      try {
+        const raw2 = localStorage.getItem(RECIPE_STATUS_KEY);
+        const all = safeParse(raw2, {});
+        all[userId] = result;
+        localStorage.setItem(RECIPE_STATUS_KEY, JSON.stringify(all));
+      } catch {}
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+function saveStatus(userId, status) {
+  try {
+    const raw = localStorage.getItem(RECIPE_STATUS_KEY);
+    const all = safeParse(raw, {});
+    // Never store null/undefined entries
+    const cleaned = {};
+    for (const [id, entry] of Object.entries(status)) {
+      if (isValidEntry(entry)) {
+        cleaned[id] = entry;
+      }
+    }
+    all[userId] = cleaned;
+    localStorage.setItem(RECIPE_STATUS_KEY, JSON.stringify(all));
+  } catch {}
+}
+
 export function RecipeProvider({ children }) {
-  const { isAuthenticated, refreshUserData } = useAuth();
-  const [recipes, setRecipes] = useState([]);
-  const [history, setHistory] = useState({});
-  const [recipesLoading, setRecipesLoading] = useState(false);
+  const { activeUserId } = useAuth();
+
+  const [statusMap, setStatusMap] = useState(() =>
+    activeUserId ? loadStatus(activeUserId) : {},
+  );
 
   useEffect(() => {
-    if (isAuthenticated) {
-      void loadRecipeHistory();
+    if (activeUserId) {
+      setStatusMap(loadStatus(activeUserId));
     } else {
-      setRecipes([]);
-      setHistory({});
+      setStatusMap({});
     }
-  }, [isAuthenticated]);
+  }, [activeUserId]);
 
-  const loadRecipeHistory = useCallback(async () => {
-    setRecipesLoading(true);
-    try {
-      const response = await getRecipeHistory();
-      const mapped = response.data.map(mapRecipeFromApi);
-      const deduplicated = deduplicateRecipesByTitle(mapped);
-      setRecipes(deduplicated);
-      setHistory(buildHistoryMap(deduplicated));
-      return deduplicated;
-    } finally {
-      setRecipesLoading(false);
+  useEffect(() => {
+    if (activeUserId) {
+      saveStatus(activeUserId, statusMap);
     }
-  }, []);
+  }, [activeUserId, statusMap]);
 
-  const generateRecommendations = useCallback(async (goal) => {
-    const response = await recommendRecipes(goal ? { goal } : {});
-    const mapped = response.data.map(mapRecipeFromApi);
-    setRecipes((prev) => mergeRecipes(mapped, prev));
-    setHistory((prev) => ({ ...prev, ...buildHistoryMap(mapped) }));
-    return mapped;
-  }, []);
-
-  const toggleSave = useCallback(async (recipeId) => {
-    const target = recipes.find((item) => item.id === recipeId);
-    if (!target) return;
-
-    if (target.isSaved) {
-      await unsaveRecipe(recipeId);
-    } else {
-      await saveRecipe(recipeId);
-    }
-
-    await loadRecipeHistory();
-    void refreshUserData();
-  }, [recipes, loadRecipeHistory, refreshUserData]);
-
-  const toggleComplete = useCallback(async (recipeId) => {
-    await markRecipeCooked(recipeId);
-    await loadRecipeHistory();
-    void refreshUserData();
-  }, [loadRecipeHistory, refreshUserData]);
-
-  const viewRecipe = useCallback((recipeId) => {
-    setHistory((prev) => ({
-      ...prev,
-      [recipeId]: {
-        ...(prev[recipeId] || { recipeId, isSaved: false, isCompleted: false }),
-        lastActivity: Date.now(),
-      },
-    }));
-  }, []);
-
-  const getRecipeById = useCallback(
-    (id) => recipes.find((item) => item.id === id) || null,
-    [recipes]
+  const toggleSave = useCallback(
+    (recipeId) => {
+      if (!activeUserId) return;
+      setStatusMap((prev) => {
+        const existing = prev[recipeId];
+        const merged = migrateEntry(recipeId, existing);
+        const updated = {
+          ...merged,
+          recipeId,
+          isSaved: !merged.isSaved,
+          lastActivity: Date.now(),
+        };
+        saveStatus(activeUserId, { ...prev, [recipeId]: updated });
+        return { ...prev, [recipeId]: updated };
+      });
+    },
+    [activeUserId],
   );
 
-  const savedRecipes = recipes.filter((item) => item.isSaved).map((item) => item.id);
-  const completedRecipes = recipes
-    .filter((item) => item.isCompleted)
-    .map((item) => item.id);
-
-  const value = useMemo(
-    () => ({
-      recipes,
-      savedRecipes,
-      completedRecipes,
-      history,
-      recipesLoading,
-      refreshRecipes: loadRecipeHistory,
-      generateRecommendations,
-      viewRecipe,
-      toggleSave,
-      toggleComplete,
-      getRecipeById,
-    }),
-    [
-      recipes,
-      savedRecipes,
-      completedRecipes,
-      history,
-      recipesLoading,
-      loadRecipeHistory,
-      generateRecommendations,
-      viewRecipe,
-      toggleSave,
-      toggleComplete,
-      getRecipeById,
-    ]
+  const toggleComplete = useCallback(
+    (recipeId) => {
+      if (!activeUserId) return;
+      setStatusMap((prev) => {
+        const existing = prev[recipeId];
+        const merged = migrateEntry(recipeId, existing);
+        const updated = {
+          ...merged,
+          recipeId,
+          isCompleted: !merged.isCompleted,
+          lastActivity: Date.now(),
+        };
+        saveStatus(activeUserId, { ...prev, [recipeId]: updated });
+        return { ...prev, [recipeId]: updated };
+      });
+    },
+    [activeUserId],
   );
 
-  return <RecipeContext.Provider value={value}>{children}</RecipeContext.Provider>;
-}
-
-function buildHistoryMap(recipes) {
-  return recipes.reduce((accumulator, recipe) => {
-    accumulator[recipe.id] = {
-      recipeId: recipe.id,
-      isSaved: recipe.isSaved,
-      isCompleted: recipe.isCompleted,
-      lastActivity: new Date(recipe.updatedAt || recipe.createdAt || Date.now()).getTime(),
-    };
-    return accumulator;
-  }, {});
-}
-
-function deduplicateRecipesByTitle(recipesList) {
-  const map = new Map();
-  // Traverse from oldest to newest (index length-1 down to 0) so that 
-  // newer recipes (which appear first in list since response is desc) overwrite older duplicates
-  for (let i = recipesList.length - 1; i >= 0; i--) {
-    const recipe = recipesList[i];
-    const key = recipe.title.trim().toLowerCase();
-    map.set(key, recipe);
-  }
-  return Array.from(map.values()).sort(
-    (left, right) =>
-      new Date(right.updatedAt || right.createdAt || 0).getTime() -
-      new Date(left.updatedAt || left.createdAt || 0).getTime()
+  const viewRecipe = useCallback(
+    (recipeId) => {
+      if (!activeUserId) return;
+      setStatusMap((prev) => {
+        const existing = prev[recipeId];
+        const merged = migrateEntry(recipeId, existing);
+        const updated = {
+          ...merged,
+          recipeId,
+          lastActivity: Math.max(merged.lastActivity || 0, Date.now()),
+        };
+        return { ...prev, [recipeId]: updated };
+      });
+    },
+    [activeUserId],
   );
-}
 
-function mergeRecipes(incoming, existing) {
-  const combined = [...existing, ...incoming];
-  return deduplicateRecipesByTitle(combined);
+  const validEntries = Object.values(statusMap).filter(isValidEntry);
+
+  const savedRecipes = validEntries
+    .filter((entry) => entry.isSaved)
+    .map((entry) => entry.recipeId);
+
+  const completedRecipes = validEntries
+    .filter((entry) => entry.isCompleted)
+    .map((entry) => entry.recipeId);
+
+  return (
+    <RecipeContext.Provider
+      value={{
+        savedRecipes,
+        completedRecipes,
+        history: statusMap,
+        viewRecipe,
+        toggleSave,
+        toggleComplete,
+      }}
+    >
+      {children}
+    </RecipeContext.Provider>
+  );
 }
 
 export function useRecipe() {

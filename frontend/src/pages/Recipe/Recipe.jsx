@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, ArrowUpDown, Camera } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import RecipeCard from '../../components/cards/RecipeCard';
+import { recipes } from '../../data/recipes';
 import { useRecipe } from '../../context/RecipeContext';
 
 const filterOptions = [
@@ -21,52 +22,54 @@ const sortOptions = [
 ];
 
 
-export default function RecipeHistory() {
+export default function Recipe() {
   const navigate = useNavigate();
-  const {
-    recipes,
-    savedRecipes,
-    completedRecipes,
-    viewRecipe,
-    toggleSave,
-    toggleComplete,
-  } = useRecipe();
+  const { history, savedRecipes, completedRecipes, viewRecipe, toggleSave, toggleComplete } = useRecipe();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
   const [activeSort, setActiveSort] = useState('newest');
   const [sortAscending, setSortAscending] = useState(false);
 
-  const searched = recipes.filter((recipe) => {
+  const historyEntries = Object.values(history);
+
+  const featuredEntry = historyEntries.length > 0
+    ? historyEntries.reduce((best, curr) =>
+        curr.lastActivity > best.lastActivity ? curr : best
+      )
+    : null;
+
+  const searched = historyEntries.filter((entry) => {
+    const recipe = recipes.find((r) => r.id === entry.recipeId);
+    if (!recipe) return false;
     return (
       recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       recipe.category.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
-  const tabFiltered = searched.filter((recipe) => {
+  const tabFiltered = searched.filter((entry) => {
     if (activeFilter === 'all') return true;
-    if (activeFilter === 'saved') return savedRecipes.includes(recipe.id);
-    if (activeFilter === 'completed') return completedRecipes.includes(recipe.id);
+    if (activeFilter === 'saved') return savedRecipes.includes(entry.recipeId);
+    if (activeFilter === 'completed') return completedRecipes.includes(entry.recipeId);
     return true;
   });
 
   const sorted = [...tabFiltered].sort((a, b) => {
     const asc = sortAscending ? 1 : -1;
-    const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
-    const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
-
-    if (activeSort === 'newest') return (timeB - timeA) * asc;
-    if (activeSort === 'oldest') return (timeA - timeB) * asc;
-    if (activeSort === 'calories-high') return (b.calories - a.calories) * asc;
-    if (activeSort === 'calories-low') return (a.calories - b.calories) * asc;
-    if (activeSort === 'protein-high') return ((b.protein || 0) - (a.protein || 0)) * asc;
-    if (activeSort === 'carbs-high') return ((b.carbs || 0) - (a.carbs || 0)) * asc;
+    if (activeSort === 'newest') return (b.lastActivity - a.lastActivity) * asc;
+    if (activeSort === 'oldest') return (a.lastActivity - b.lastActivity) * asc;
+    const recA = recipes.find((r) => r.id === a.recipeId) || {};
+    const recB = recipes.find((r) => r.id === b.recipeId) || {};
+    if (activeSort === 'calories-high') return (recB.calories - recA.calories) * asc;
+    if (activeSort === 'calories-low') return (recA.calories - recB.calories) * asc;
+    if (activeSort === 'protein-high') return ((recB.protein || 0) - (recA.protein || 0)) * asc;
+    if (activeSort === 'carbs-high') return ((recB.carbs || 0) - (recA.carbs || 0)) * asc;
     return 0;
   });
 
-  const handleRecipeClick = (recipe) => {
-    viewRecipe(recipe.id);
-    navigate(`/recipe/${recipe.id}`);
+  const handleRecipeClick = (entry) => {
+    viewRecipe(entry.recipeId);
+    navigate(`/recipe/${entry.recipeId}`);
   };
 
   return (
@@ -78,17 +81,17 @@ export default function RecipeHistory() {
             className="text-xs font-semibold uppercase"
             style={{ color: '#16A34A', letterSpacing: '0.12em' }}
           >
-            Your Activity
+            Recipes
           </p>
           <h2
             className="text-xl sm:text-2xl lg:text-3xl font-bold"
             style={{ color: '#1E293B', letterSpacing: '-0.02em' }}
           >
-            Recipe History
+            Recipe
           </h2>
         </div>
 
-        {recipes.length === 0 ? (
+        {historyEntries.length === 0 ? (
           /* First-time user empty state */
           <div
             className="bg-white rounded-2xl p-10 text-center"
@@ -115,7 +118,7 @@ export default function RecipeHistory() {
                 Scan Food
               </button>
               <button
-                onClick={() => navigate('/recipe-guide')}
+                onClick={() => navigate('/recipes')}
                 className="px-6 py-3 rounded-full text-sm font-semibold transition-all hover:opacity-90"
                 style={{ backgroundColor: '#F8FAFC', color: '#64748B', border: '1.5px solid #E2E8F0' }}
               >
@@ -220,7 +223,7 @@ export default function RecipeHistory() {
                       Scan Food
                     </button>
                     <button
-                      onClick={() => navigate('/recipe-guide')}
+                      onClick={() => navigate('/recipes')}
                       className="px-6 py-3 rounded-full text-sm font-semibold transition-all hover:opacity-90"
                       style={{ backgroundColor: '#F8FAFC', color: '#64748B', border: '1.5px solid #E2E8F0' }}
                     >
@@ -244,9 +247,12 @@ export default function RecipeHistory() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-                    {sorted.map((recipe) => {
+                    {sorted.map((entry) => {
+                      const recipe = recipes.find((r) => r.id === entry.recipeId);
+                      if (!recipe) return null;
+
                       return (
-                        <div key={recipe.id} className="relative">
+                        <div key={entry.recipeId} className="relative">
                           <RecipeCard
                             title={recipe.title}
                             description={recipe.description}
@@ -255,12 +261,12 @@ export default function RecipeHistory() {
                             calories={recipe.calories}
                             protein={recipe.protein}
                             carbs={recipe.carbs}
-                            recipeId={recipe.id}
-                            isSaved={savedRecipes.includes(recipe.id)}
-                            isCompleted={completedRecipes.includes(recipe.id)}
-                            onSave={() => toggleSave(recipe.id)}
-                            onComplete={() => toggleComplete(recipe.id)}
-                            onClick={() => handleRecipeClick(recipe)}
+                            recipeId={entry.recipeId}
+                            isSaved={savedRecipes.includes(entry.recipeId)}
+                            isCompleted={completedRecipes.includes(entry.recipeId)}
+                            onSave={() => toggleSave(entry.recipeId)}
+                            onComplete={() => toggleComplete(entry.recipeId)}
+                            onClick={() => handleRecipeClick(entry)}
                           />
                         </div>
                       );

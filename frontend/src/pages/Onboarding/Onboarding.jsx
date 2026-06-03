@@ -123,7 +123,7 @@ function GenderDropdown({ value, onChange }) {
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { completeOnboarding } = useAuth();
+  const { completeOnboarding, updateActiveProfile, getActiveUser } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -160,15 +160,17 @@ export default function Onboarding() {
     setCurrentStep(1);
   };
 
-  const handleFinish = async () => {
-    await completeOnboarding({
+  const handleFinish = () => {
+    const genderMap = { male: 'Male', female: 'Female', other: 'Other' };
+    updateActiveProfile({
       age: formData.age,
       weight: formData.weight,
       height: formData.height,
-      gender: formData.gender,
-      goal: formData.goal,
+      gender: genderMap[formData.gender] || formData.gender,
+      nutritionGoal: formData.goal,
       activityLevel: formData.activity,
     });
+    completeOnboarding();
     navigate('/dashboard', { replace: true });
   };
 
