@@ -2,7 +2,11 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
 const { env } = require("../config/env");
-const { createRefreshToken: createRefreshTokenRecord, findRefreshToken, revokeRefreshToken: revokeRefreshTokenRecord } = require("../repositories/token.repository");
+const {
+  createRefreshToken: createRefreshTokenRecord,
+  findRefreshToken,
+  revokeRefreshToken: revokeRefreshTokenRecord,
+} = require("../repositories/token.repository");
 
 function createAccessToken(user) {
   return jwt.sign(
@@ -12,7 +16,7 @@ function createAccessToken(user) {
       role: String(user.role).toLowerCase(),
     },
     env.JWT_ACCESS_SECRET,
-    { expiresIn: env.JWT_ACCESS_EXPIRES_IN }
+    { expiresIn: env.JWT_ACCESS_EXPIRES_IN },
   );
 }
 
@@ -22,7 +26,9 @@ async function createRefreshToken(user) {
   await createRefreshTokenRecord({
     userId: user.id,
     token,
-    expiresAt: new Date(Date.now() + parseDurationToMs(env.JWT_REFRESH_EXPIRES_IN)),
+    expiresAt: new Date(
+      Date.now() + parseDurationToMs(env.JWT_REFRESH_EXPIRES_IN),
+    ),
   });
 
   return token;
