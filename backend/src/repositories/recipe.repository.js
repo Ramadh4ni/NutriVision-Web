@@ -5,8 +5,8 @@ function createManyRecipes(data) {
     data.map((recipe) =>
       prisma.recipe.create({
         data: recipe,
-      })
-    )
+      }),
+    ),
   );
 }
 

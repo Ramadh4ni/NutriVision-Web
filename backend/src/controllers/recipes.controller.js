@@ -1,5 +1,8 @@
 const { findProfileByUserId } = require("../repositories/profile.repository");
-const { findLatestScanByUserId } = require("../repositories/scan.repository");
+const {
+  findLatestScanByUserId,
+  findRecentScansByUserId,
+} = require("../repositories/scan.repository");
 const {
   buildRecipeRecommendations,
   saveGeneratedRecipes,
@@ -11,16 +14,38 @@ const {
 async function recommendRecipes(req, res, next) {
   try {
     const profile = await findProfileByUserId(req.user.id);
-    const latestScan = await findLatestScanByUserId(req.user.id);
-    const scanSummary = latestScan ? latestScan.detectedItems.join(", ") : "user nutrition preferences";
-    const goal = (req.body.goal || profile?.goal || "maintenance").toString().toLowerCase();
+    const recentScans = await findRecentScansByUserId(req.user.id, 5);
+
+    // Fallback to the latest single scan if no scans in the last 5 minutes
+    let scansToProcess = recentScans;
+    if (recentScans.length === 0) {
+      const latest = await findLatestScanByUserId(req.user.id);
+      scansToProcess = latest ? [latest] : [];
+    }
+
+    const allDetectedItems = [
+      ...new Set(scansToProcess.flatMap((scan) => scan.detectedItems || [])),
+    ];
+    const scanSummary = allDetectedItems.join(", ") || "user nutrition preferences";
+    const latestScanId = scansToProcess[0]?.id || null;
+
+    const goal = (req.body.goal || profile?.goal || "maintenance")
+      .toString()
+      .toLowerCase();
+
+    const recipeCount = allDetectedItems.length >= 2 ? 8 : 4;
+
     const generatedRecipes = buildRecipeRecommendations({
       userId: req.user.id,
       goal,
+      detectedItems: allDetectedItems,
       scanSummary,
+      profile,
+      scanId: latestScanId,
+      recipeCount,
     });
 
-    const savedRecipes = await saveGeneratedRecipes(generatedRecipes);
+    const savedRecipes = await saveGeneratedRecipes(await generatedRecipes);
 
     res.status(201).json({
       success: true,

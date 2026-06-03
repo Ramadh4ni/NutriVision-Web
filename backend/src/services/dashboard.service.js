@@ -11,8 +11,12 @@ async function getDashboardSummary(userId) {
   ]);
 
   const recentRecipes = recipes.slice(0, 5);
-  const favoriteRecipes = recipes.filter((item) => item.source?.includes("favorite:true"));
-  const cookedRecipes = recipes.filter((item) => item.source?.includes("cooked:true"));
+  const favoriteRecipes = recipes.filter((item) =>
+    item.source?.includes("favorite:true"),
+  );
+  const cookedRecipes = recipes.filter((item) =>
+    item.source?.includes("cooked:true"),
+  );
 
   return {
     profile,
