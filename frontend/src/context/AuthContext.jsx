@@ -1,280 +1,232 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  clearSessionTokens,
+  getDashboard,
+  getMe,
+  login as loginRequest,
+  loginGoogle,
+  logout as logoutRequest,
+  mapProfileFromApi,
+  refreshSession,
+  register as registerRequest,
+  saveOnboarding,
+  setSessionTokens,
+  updateAccountPassword,
+  updateAccountProfile,
+  getAccessToken,
+  getRefreshToken,
+} from "../lib/api";
 
 const AuthContext = createContext(null);
 
-const STORAGE_KEY = "nutrivision_users";
-const ACTIVE_USER_KEY = "nutrivision_active_user";
-const IMAGE_STORAGE_KEY = "nutrivision_profile_image";
-
-function safeParse(value, fallback) {
-  if (value === null || value === undefined) return fallback;
-  try {
-    return JSON.parse(value);
-  } catch {
-    console.warn(
-      "[AuthContext] Corrupted localStorage data — resetting to default.",
-    );
-    return fallback;
-  }
-}
-
-function loadUsers() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  return safeParse(raw, {});
-}
-
-function saveUsers(users) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-  } catch {}
-}
-
-function loadActiveUserId() {
-  try {
-    return localStorage.getItem(ACTIVE_USER_KEY) || null;
-  } catch {
-    return null;
-  }
-}
-
-function saveProfileImage(imageDataUrl) {
-  try {
-    localStorage.setItem(IMAGE_STORAGE_KEY, imageDataUrl || "");
-  } catch {}
-}
-
-function loadProfileImage() {
-  try {
-    return localStorage.getItem(IMAGE_STORAGE_KEY) || null;
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }) {
-  const [users, setUsers] = useState(() => loadUsers());
-  const [activeUserId, setActiveUserId] = useState(() => loadActiveUserId());
+  const [currentUser, setCurrentUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [dashboard, setDashboard] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    saveUsers(users);
-  }, [users]);
-
-  useEffect(() => {
-    if (activeUserId) {
-      try {
-        localStorage.setItem(ACTIVE_USER_KEY, activeUserId);
-      } catch {}
-    } else {
-      try {
-        localStorage.removeItem(ACTIVE_USER_KEY);
-      } catch {}
-    }
-  }, [activeUserId]);
-
-  const hasUsers = Object.keys(users).length > 0;
-
-  const registerUser = (name, email, password) => {
-    const lowerEmail = email.trim().toLowerCase();
-    if (users[lowerEmail]) {
-      return {
-        success: false,
-        error: "An account with this email already exists.",
-      };
-    }
-    const newUser = {
-      id: lowerEmail,
-      name: name.trim(),
-      email: lowerEmail,
-      password,
-      hasCompletedOnboarding: false,
-      profile: {
-        fullName: name.trim(),
-        email: lowerEmail,
-        age: "",
-        gender: "",
-        weight: "",
-        height: "",
-      },
-      profileImage: null,
-      savedRecipes: [],
-      completedRecipes: [],
-    };
-    setUsers((prev) => ({ ...prev, [lowerEmail]: newUser }));
-    setActiveUserId(lowerEmail);
-    return { success: true };
-  };
-
-  const login = (email, password) => {
-    const lowerEmail = email.trim().toLowerCase();
-    const user = users[lowerEmail];
-    if (!user) {
-      return { success: false, error: "No account found with this email." };
-    }
-    if (user.password !== password) {
-      return { success: false, error: "Incorrect password." };
-    }
-    setActiveUserId(lowerEmail);
-    return { success: true };
-  };
-
-  const logout = () => {
-    setActiveUserId(null);
-  };
-
-  const getActiveUser = () => {
-    if (!activeUserId) return null;
-    let user = users[activeUserId] || null;
-
-    if (user && !user.profileImage) {
-      const stored = loadProfileImage();
-      if (stored) {
-        user = { ...user, profileImage: stored };
-      }
-    }
-    return user;
-  };
-
-  const getActiveProfileImage = () => {
-    if (!activeUserId) return null;
-    return loadProfileImage();
-  };
-
-  const updateActiveUser = (data) => {
-    if (!activeUserId) return;
-    setUsers((prev) => {
-      if (!prev[activeUserId]) return prev;
-      return {
-        ...prev,
-        [activeUserId]: { ...prev[activeUserId], ...data },
-      };
-    });
-  };
-
-  const updateActiveProfile = (profileData) => {
-    if (!activeUserId) return;
-    setUsers((prev) => {
-      if (!prev[activeUserId]) return prev;
-      return {
-        ...prev,
-        [activeUserId]: {
-          ...prev[activeUserId],
-          profile: { ...prev[activeUserId].profile, ...profileData },
-        },
-      };
-    });
-  };
-
-  const updateActiveProfileImage = (imageDataUrl) => {
-    if (!activeUserId) return;
-
-    saveProfileImage(imageDataUrl);
-
-    setUsers((prev) => {
-      if (!prev[activeUserId]) return prev;
-      return {
-        ...prev,
-        [activeUserId]: { ...prev[activeUserId], profileImage: imageDataUrl },
-      };
-    });
-  };
-
-  const completeOnboarding = () => {
-    if (!activeUserId) return;
-
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const all = safeParse(raw, {});
-      if (all[activeUserId]) {
-        all[activeUserId].hasCompletedOnboarding = true;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-      }
-    } catch {}
-    setUsers((prev) => {
-      if (!prev[activeUserId]) return prev;
-      return {
-        ...prev,
-        [activeUserId]: { ...prev[activeUserId], hasCompletedOnboarding: true },
-      };
-    });
-  };
-
-  const updateUserPassword = (currentPassword, newPassword) => {
-    if (!activeUserId) return { success: false, error: "Not logged in." };
-    const user = users[activeUserId];
-    if (!user) return { success: false, error: "User not found." };
-    if (user.password !== currentPassword)
-      return { success: false, error: "Current password is incorrect." };
-    if (newPassword.length < 8)
-      return {
-        success: false,
-        error: "Password must be at least 8 characters.",
-      };
-    setUsers((prev) => {
-      if (!prev[activeUserId]) return prev;
-      return {
-        ...prev,
-        [activeUserId]: { ...prev[activeUserId], password: newPassword },
-      };
-    });
-    return { success: true };
-  };
-
-  const toggleSavedRecipe = (recipeId) => {
-    if (!activeUserId) return;
-    setUsers((prev) => {
-      if (!prev[activeUserId]) return prev;
-      const user = prev[activeUserId];
-      const saved = user.savedRecipes || [];
-      const next = saved.includes(recipeId)
-        ? saved.filter((id) => id !== recipeId)
-        : [...saved, recipeId];
-      return { ...prev, [activeUserId]: { ...user, savedRecipes: next } };
-    });
-  };
-
-  const toggleCompletedRecipe = (recipeId) => {
-    if (!activeUserId) return;
-    setUsers((prev) => {
-      if (!prev[activeUserId]) return prev;
-      const user = prev[activeUserId];
-      const completed = user.completedRecipes || [];
-      const next = completed.includes(recipeId)
-        ? completed.filter((id) => id !== recipeId)
-        : [...completed, recipeId];
-      return { ...prev, [activeUserId]: { ...user, completedRecipes: next } };
-    });
-  };
-
-  useEffect(() => {
-    setIsLoading(false);
+    bootstrapSession();
   }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated: !!activeUserId,
-        activeUserId,
-        hasUsers,
-        users,
-        isLoading,
-        registerUser,
-        login,
-        logout,
-        getActiveUser,
-        getActiveProfileImage,
-        updateActiveUser,
-        updateActiveProfile,
-        updateActiveProfileImage,
-        updateUserPassword,
-        completeOnboarding,
-        toggleSavedRecipe,
-        toggleCompletedRecipe,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  async function bootstrapSession() {
+    const accessToken = getAccessToken();
+    const refreshToken = getRefreshToken();
+
+    if (!accessToken && !refreshToken) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const me = await getMe();
+      const user = me.data.user;
+      setCurrentUser(user);
+      await hydrateUserData(user);
+    } catch (_error) {
+      if (refreshToken) {
+        try {
+          const refreshed = await refreshSession();
+          setSessionTokens(refreshed.data.tokens);
+          const me = await getMe();
+          const user = me.data.user;
+          setCurrentUser(user);
+          await hydrateUserData(user);
+        } catch {
+          clearSessionTokens();
+          setCurrentUser(null);
+          setProfile(null);
+          setDashboard(null);
+        }
+      } else {
+        clearSessionTokens();
+        setCurrentUser(null);
+        setProfile(null);
+        setDashboard(null);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function hydrateUserData(user) {
+    try {
+      const dashboardResponse = await getDashboard();
+      setDashboard(dashboardResponse.data);
+      setProfile(mapProfileFromApi(dashboardResponse.data.profile, user));
+      return dashboardResponse.data;
+    } catch {
+      setDashboard(null);
+      setProfile(mapProfileFromApi(null, user));
+      return null;
+    }
+  }
+
+  async function registerUser(name, email, password) {
+    try {
+      const result = await registerRequest({
+        fullName: name,
+        email,
+        password,
+      });
+      setSessionTokens(result.data.tokens);
+      setCurrentUser(result.data.user);
+      setProfile(
+        mapProfileFromApi(null, {
+          fullName: result.data.user.fullName,
+          email: result.data.user.email,
+        })
+      );
+      setDashboard(null);
+      return { success: true, hasCompletedOnboarding: false };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.payload?.message || error.message,
+      };
+    }
+  }
+
+  async function login(email, password) {
+    try {
+      const result = await loginRequest({ email, password });
+      setSessionTokens(result.data.tokens);
+      setCurrentUser(result.data.user);
+      const dashboardData = await hydrateUserData(result.data.user);
+      return {
+        success: true,
+        hasCompletedOnboarding: !!dashboardData?.profile,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.payload?.message || error.message,
+      };
+    }
+  }
+
+  async function loginWithGoogle(payload) {
+    try {
+      // payload can be { credential } (ID token) or { email, fullName, googleId } (from userinfo)
+      const result = await loginGoogle(payload);
+      setSessionTokens(result.data.tokens);
+      setCurrentUser(result.data.user);
+      const dashboardData = await hydrateUserData(result.data.user);
+      return {
+        success: true,
+        hasCompletedOnboarding: !!dashboardData?.profile,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.payload?.message || error.message,
+      };
+    }
+  }
+
+  async function completeOnboarding(profileData) {
+    await saveOnboarding({
+      age: Number(profileData.age),
+      gender: profileData.gender,
+      weightKg: Number(profileData.weight),
+      heightCm: Number(profileData.height),
+      goal: profileData.goal,
+      activityLevel: profileData.activityLevel,
+    });
+    const dashboardResponse = await getDashboard();
+    setDashboard(dashboardResponse.data);
+    setProfile(mapProfileFromApi(dashboardResponse.data.profile, currentUser));
+    return dashboardResponse.data;
+  }
+
+  async function updateActiveProfile(profileData) {
+    const payload = {};
+    if (profileData.age !== undefined) payload.age = Number(profileData.age);
+    if (profileData.gender !== undefined) payload.gender = profileData.gender;
+    if (profileData.weight !== undefined) payload.weightKg = Number(profileData.weight);
+    if (profileData.height !== undefined) payload.heightCm = Number(profileData.height);
+    if (profileData.goal !== undefined) payload.goal = profileData.goal;
+    if (profileData.activityLevel !== undefined) payload.activityLevel = profileData.activityLevel;
+
+    const result = await updateAccountProfile(payload);
+    const nextProfile = mapProfileFromApi(result.data, currentUser);
+    setProfile((prev) => ({
+      ...prev,
+      ...nextProfile,
+      fullName: profileData.fullName ?? prev?.fullName ?? currentUser?.fullName ?? "",
+      email: profileData.email ?? prev?.email ?? currentUser?.email ?? "",
+    }));
+    const dashboardResponse = await getDashboard();
+    setDashboard(dashboardResponse.data);
+    return result.data;
+  }
+
+  async function updateUserPassword(currentPassword, newPassword) {
+    try {
+      await updateAccountPassword({ currentPassword, newPassword });
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.payload?.message || error.message,
+      };
+    }
+  }
+
+  async function logout() {
+    try {
+      await logoutRequest();
+    } catch {}
+    clearSessionTokens();
+    setCurrentUser(null);
+    setProfile(null);
+    setDashboard(null);
+  }
+
+  const value = useMemo(
+    () => ({
+      isAuthenticated: !!currentUser,
+      currentUser,
+      profile,
+      dashboard,
+      isLoading,
+      hasCompletedOnboarding: !!dashboard?.profile,
+      registerUser,
+      login,
+      loginWithGoogle,
+      logout,
+      completeOnboarding,
+      updateActiveProfile,
+      updateUserPassword,
+      refreshUserData: async () => {
+        if (!currentUser) return;
+        await hydrateUserData(currentUser);
+      },
+    }),
+    [currentUser, profile, dashboard, isLoading]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
