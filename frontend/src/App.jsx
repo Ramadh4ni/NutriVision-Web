@@ -21,52 +21,52 @@ import { UserProvider, useUser } from "./context/UserContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 function ProtectedRoute({ children }) {
-  const { isAuthenticated, activeUserId, users } = useAuth();
-  if (!isAuthenticated || !activeUserId) {
+  const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
+  if (isLoading) {
+    return null;
+  }
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  if (!users[activeUserId]?.hasCompletedOnboarding) {
+  if (!hasCompletedOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
   return children;
 }
 
 function GuestRoute({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
+  if (isLoading) {
+    return null;
+  }
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={hasCompletedOnboarding ? "/dashboard" : "/onboarding"} replace />;
   }
   return children;
 }
 
 function OnboardingRoute({ children }) {
-  const { isAuthenticated, activeUserId, users } = useAuth();
-  if (
-    isAuthenticated &&
-    activeUserId &&
-    users[activeUserId]?.hasCompletedOnboarding
-  ) {
+  const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
+  if (isLoading) {
+    return null;
+  }
+  if (isAuthenticated && hasCompletedOnboarding) {
     return <Navigate to="/dashboard" replace />;
   }
   return children;
 }
 
 function AuthHydrator() {
-  const { isAuthenticated, activeUserId, users } = useAuth();
+  const { profile, isAuthenticated } = useAuth();
   const { hydrateFromAuth } = useUser();
-  const prevUserId = useRef(null);
+  const prevProfile = useRef(null);
 
   useEffect(() => {
-    if (prevUserId.current !== activeUserId) {
-      prevUserId.current = activeUserId;
-
-      if (isAuthenticated && activeUserId) {
-        hydrateFromAuth(users[activeUserId] || null);
-      } else {
-        hydrateFromAuth(null);
-      }
+    if (prevProfile.current !== profile) {
+      prevProfile.current = profile;
+      hydrateFromAuth(isAuthenticated ? profile : null);
     }
-  }, [isAuthenticated, activeUserId, users, hydrateFromAuth]);
+  }, [isAuthenticated, profile, hydrateFromAuth]);
 
   return null;
 }

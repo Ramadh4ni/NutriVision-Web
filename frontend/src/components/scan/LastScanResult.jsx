@@ -1,10 +1,35 @@
+import { useEffect } from 'react';
 import { Clock, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useScan } from '../../context/ScanContext';
+import { useAuth } from '../../context/AuthContext';
+import { resolveImageUrl } from '../../lib/api';
 
 export default function LastScanResult({ onScanAgain }) {
   const navigate = useNavigate();
-  const { lastScan } = useScan();
+  const { lastScan, saveScan } = useScan();
+  const { dashboard } = useAuth();
+
+  useEffect(() => {
+    if (!lastScan && dashboard?.latestScan) {
+      const dbScan = dashboard.latestScan;
+      const allDetectedItems = Array.isArray(dbScan.detectedItems) ? dbScan.detectedItems : [];
+      const aggregatedNutrition = dbScan.nutritionJson || { calories: 0, protein: 0, carbs: 0, fat: 0 };
+      
+      saveScan({
+        id: dbScan.id,
+        thumbnail: resolveImageUrl(dbScan.imageUrl),
+        thumbnails: [resolveImageUrl(dbScan.imageUrl)],
+        photoCount: 1,
+        foodName: allDetectedItems.join(", ") || "Detected Ingredients",
+        ingredients: allDetectedItems,
+        confidence: dbScan.aiRawOutput?.confidence || 1.0,
+        nutrition: aggregatedNutrition,
+        timestamp: new Date(dbScan.createdAt).toLocaleString(),
+        raw: dbScan,
+      });
+    }
+  }, [lastScan, dashboard?.latestScan, saveScan]);
 
   if (!lastScan) {
     return (
@@ -38,7 +63,7 @@ export default function LastScanResult({ onScanAgain }) {
         {/* Thumbnail */}
         <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden flex-shrink-0">
           <img
-            src={lastScan.thumbnail}
+            src={resolveImageUrl(lastScan.thumbnail)}
             alt={lastScan.foodName}
             className="w-full h-full object-cover"
           />

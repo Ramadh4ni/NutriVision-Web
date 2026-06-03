@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Camera } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import RecipeCard from '../../components/cards/RecipeCard';
-import { Search, Clock, Flame, ArrowUpDown } from 'lucide-react';
-import { recipes } from '../../data/recipes';
+import { Search, ArrowUpDown } from 'lucide-react';
 import { useRecipe } from '../../context/RecipeContext';
 
 const sortOptions = [
@@ -18,7 +17,14 @@ const sortOptions = [
 
 export default function RecipeGuide() {
   const navigate = useNavigate();
-  const { savedRecipes, completedRecipes, toggleSave, toggleComplete, viewRecipe } = useRecipe();
+  const {
+    recipes,
+    savedRecipes,
+    completedRecipes,
+    toggleSave,
+    toggleComplete,
+    viewRecipe,
+  } = useRecipe();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSort, setActiveSort] = useState('newest');
   const [sortAscending, setSortAscending] = useState(false);
@@ -31,6 +37,16 @@ export default function RecipeGuide() {
     .sort((a, b) => {
       const asc = sortAscending ? 1 : -1;
       switch (activeSort) {
+        case 'newest':
+          return (
+            new Date(b.updatedAt || b.createdAt || 0).getTime() -
+            new Date(a.updatedAt || a.createdAt || 0).getTime()
+          ) * asc;
+        case 'oldest':
+          return (
+            new Date(a.updatedAt || a.createdAt || 0).getTime() -
+            new Date(b.updatedAt || b.createdAt || 0).getTime()
+          ) * asc;
         case 'calories-high': return (b.calories - a.calories) * asc;
         case 'calories-low': return (a.calories - b.calories) * asc;
         case 'protein-high': return (b.protein - a.protein) * asc;

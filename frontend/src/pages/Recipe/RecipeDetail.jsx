@@ -2,26 +2,47 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import RecipeHero from "../../components/recipe-detail/RecipeHero";
-import { getRecipeById } from "../../data/recipes";
 import { useRecipe } from "../../context/RecipeContext";
 
 export default function RecipeDetail() {
   const { id } = useParams();
-  const { viewRecipe } = useRecipe();
+  const { getRecipeById, refreshRecipes, viewRecipe } = useRecipe();
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    const found = getRecipeById(id);
-    if (found) {
-      setRecipe(found);
-      viewRecipe(id);
-    } else {
-      setRecipe(null);
+    let isMounted = true;
+
+    async function loadRecipe() {
+      setLoading(true);
+
+      let found = getRecipeById(id);
+
+      if (!found) {
+        const refreshedRecipes = await refreshRecipes();
+        found = refreshedRecipes?.find((item) => item.id === id) || null;
+      }
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (found) {
+        setRecipe(found);
+        viewRecipe(id);
+      } else {
+        setRecipe(null);
+      }
+
+      setLoading(false);
     }
-    setLoading(false);
-  }, [id]);
+
+    void loadRecipe();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [getRecipeById, id, refreshRecipes, viewRecipe]);
 
   if (loading) {
     return (

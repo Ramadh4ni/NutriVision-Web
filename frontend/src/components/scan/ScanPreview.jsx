@@ -1,4 +1,5 @@
 import { Camera } from 'lucide-react';
+import { resolveImageUrl } from '../../lib/api';
 
 export default function ScanPreview({ scan, onScanAgain }) {
   const photoCount = scan?.photoCount || 1;
@@ -46,7 +47,7 @@ export default function ScanPreview({ scan, onScanAgain }) {
             style={{ width: 64, height: 64 }}
           >
             <img
-              src={thumbnails[0]}
+              src={resolveImageUrl(thumbnails[0])}
               alt="Scanned photo"
               className="w-full h-full object-cover"
             />
@@ -70,7 +71,7 @@ export default function ScanPreview({ scan, onScanAgain }) {
                 }}
               >
                 <img
-                  src={thumbnails[1]}
+                  src={resolveImageUrl(thumbnails[1])}
                   alt=""
                   className="w-full h-full object-cover"
                 />
@@ -90,7 +91,7 @@ export default function ScanPreview({ scan, onScanAgain }) {
               }}
             >
               <img
-                src={thumbnails[0]}
+                src={resolveImageUrl(thumbnails[0])}
                 alt=""
                 className="w-full h-full object-cover"
               />
