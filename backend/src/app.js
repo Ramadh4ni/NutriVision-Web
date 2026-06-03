@@ -17,12 +17,30 @@ app.use(
     credentials: true,
   })
 );
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginEmbedderPolicy: false,
+  })
+);
+const path = require("path");
+
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(sanitizeBodyStrings);
 app.use(httpLogger);
 app.use(apiLimiter);
+
+// Serve uploaded images statically with cross-origin headers
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    next();
+  },
+  express.static(path.join(__dirname, "../uploads"))
+);
 
 app.get("/health", (_req, res) => {
   res.status(200).json({
