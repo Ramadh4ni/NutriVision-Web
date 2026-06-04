@@ -14,7 +14,7 @@ const { NUTRITION_MAP } = require("../constants/nutrition-map");
 async function detectFoodItems(imagePath) {
   // 1. Try stand-alone FastAPI AI service (port 8000 by default)
   try {
-    const aiUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
+    const aiUrl = process.env.FASTAPI_URL || "http://localhost:8000";
     const fileBuffer = fs.readFileSync(imagePath);
     const blob = new Blob([fileBuffer]);
     const formData = new FormData();
@@ -28,9 +28,12 @@ async function detectFoodItems(imagePath) {
     if (response.ok) {
       const data = await response.json();
       const confidence = (data.confidence || 0) / 100; // API returns 0-100%, map to 0-1
-      const label = data.food_name || FOOD_LABELS[data.class_index] || "unknown";
+      const label =
+        data.food_name || FOOD_LABELS[data.class_index] || "unknown";
 
-      console.log(`[AI Standalone Service] Success prediction: ${label} (${data.confidence}%)`);
+      console.log(
+        `[AI Standalone Service] Success prediction: ${label} (${data.confidence}%)`,
+      );
       return {
         predictedIndex: data.class_index,
         detectedItems: [label],
@@ -39,7 +42,9 @@ async function detectFoodItems(imagePath) {
       };
     }
   } catch (error) {
-    console.log("[AI Standalone Service] Standalone API not available or error occurred. Falling back to local python script execution...");
+    console.log(
+      "[AI Standalone Service] Standalone API not available or error occurred. Falling back to local python script execution...",
+    );
   }
 
   // 2. Fallback to child-process script execution
