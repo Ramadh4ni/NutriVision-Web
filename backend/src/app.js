@@ -6,23 +6,52 @@ const { env } = require("./config/env");
 const { logger, httpLogger } = require("./config/logger");
 const { apiLimiter } = require("./middlewares/rate-limit.middleware");
 const routesV1 = require("./routes/v1");
-const { notFoundHandler, errorHandler } = require("./middlewares/error.middleware");
+const {
+  notFoundHandler,
+  errorHandler,
+} = require("./middlewares/error.middleware");
 const { sanitizeBodyStrings } = require("./middlewares/sanitize.middleware");
 
 const app = express();
 
+// app.use(
+//   cors({
+//     origin: env.FRONTEND_URL,
+//     credentials: true,
+//   })
+// );
+// app.use(
+//   helmet({
+//     crossOriginResourcePolicy: { policy: "cross-origin" },
+//     crossOriginEmbedderPolicy: false,
+//   })
+// );
+
+const allowedOrigins = [
+  env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
+
 app.use(
   cors({
-    origin: env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const isVercelPreview =
+        origin.endsWith(".vercel.app") && origin.includes("dales-projects");
+
+      if (allowedOrigins.includes(origin) || isVercelPreview) {
+        callback(null, true);
+      } else {
+        callback(new Error("Blocked by NutriVision CORS Security Policy"));
+      }
+    },
     credentials: true,
-  })
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  }),
 );
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-    crossOriginEmbedderPolicy: false,
-  })
-);
+
 const path = require("path");
 
 app.use(express.json({ limit: "2mb" }));
@@ -39,7 +68,7 @@ app.use(
     res.setHeader("Access-Control-Allow-Origin", "*");
     next();
   },
-  express.static(path.join(__dirname, "../uploads"))
+  express.static(path.join(__dirname, "../uploads")),
 );
 
 app.get("/health", (_req, res) => {
