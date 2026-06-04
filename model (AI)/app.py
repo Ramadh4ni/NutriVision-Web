@@ -28,7 +28,7 @@ model = tf.saved_model.load(
 
 predict_fn = model.signatures["serving_default"]
 
-print("✅ Model Loaded")
+print("Model Loaded")
 
 # =====================================================
 # LOAD CLASS NAMES
@@ -43,7 +43,7 @@ with open(
 
     class_names = json.load(f)
 
-print("✅ Class Names Loaded")
+print("Class Names Loaded")
 
 # =====================================================
 # HOME
