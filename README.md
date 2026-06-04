@@ -9,13 +9,16 @@ The project features a **Node.js/Express backend**, a **React/Vite frontend**, a
 ## Table of Contents
 1. [Key Features](#key-features)
 2. [Project Architecture](#project-architecture)
-3. [Prerequisites](#prerequisites)
-4. [Service Setup & Installation](#service-setup--installation)
+3. [Dataset](#dataset)
+   - [Dataset Sources](#dataset-sources)
+   - [Data Preprocessing](#data-preprocessing)
+4. [Prerequisites](#prerequisites)
+5. [Service Setup & Installation](#service-setup--installation)
    - [1. Backend Setup](#1-backend-setup)
    - [2. Frontend Setup](#2-frontend-setup)
    - [3. AI Model Service Setup (Python/FastAPI)](#3-ai-model-service-setup-pythonfastapi)
-5. [Running the Services](#running-the-services)
-6. [Troubleshooting & Path Adjustments](#troubleshooting--path-adjustments)
+6. [Running the Services](#running-the-services)
+7. [Troubleshooting & Path Adjustments](#troubleshooting--path-adjustments)
 
 ---
 
@@ -46,7 +49,56 @@ graph TD
 ```
 
 ---
+## Dataset
+---
+### Dataset Source
+The model is trained on a **combined dataset** of three Kaggle sources, chosen to maximize coverage of both common and Indonesian-local food ingredients:
 
+| # | Dataset | Source | Description |
+|---|---------|--------|-------------|
+| 1 | Fruit and Vegetable Image Recognition | [Kaggle](https://www.kaggle.com/datasets/kritikseth/fruit-and-vegetable-image-recognition) | General fruits & vegetables, well-labeled with broad class coverage |
+| 2 | Ingredients Bahan Makanan Image | [Kaggle](https://www.kaggle.com/datasets/byrux12/ingredients-bahan-makanan-image-gambar) | Indonesian food ingredients, suitable for local recipe context |
+| 3 | Dataset Bahan Makanan Mentah | [Kaggle](https://www.kaggle.com/datasets/efanfitriyan/dataset-bahan-makanan-mentah) | Raw ingredients with Indonesian labeling, complements dataset #2 |
+
+> **Why three datasets?**  
+> No single dataset covers both global and Indonesian-local ingredients comprehensively. Merging these three sources improves class diversity and model robustness for the NutriVision use case.
+
+---
+### Data Preprocessing
+
+All preprocessing steps are documented and reproducible inside the Jupyter Notebook:
+
+```
+📓 Notebook_Proses_Data_Nutrivision.ipynb
+```
+
+The notebook covers the following pipeline stages:
+
+1. **Data Collection & Merging** — Combines the three Kaggle datasets into a unified directory structure.
+2. **Class Filtering & Deduplication** — Removes duplicate or near-duplicate classes across datasets, standardizes class names.
+3. **Image Preprocessing**:
+   - Resize all images to a consistent input size (e.g. `224x224`)
+4. **Data Augmentation** — Applies random flips, rotations, zoom, and brightness shifts to improve generalization.
+5. **Train/Validation/Test Split** — Splits the dataset (70/20/10) and organizes into `train/`, `val/`, and `test/` directories.
+
+#### How to Run the Notebook
+
+Make sure your Python environment is active and dependencies are installed:
+
+```bash
+pip install tensorflow keras numpy pillow scikit-learn matplotlib pandas jupyter
+```
+
+Then launch the notebook:
+
+```bash
+jupyter notebook Notebook_Proses_Data_Nutrivision.ipynb
+```
+
+Run all cells sequentially. The final output will be:
+- A processed dataset folder ready for model training
+
+---
 ## Prerequisites
 Before you start, make sure you have installed:
 * **Node.js** (v18.x or later) & **npm**
