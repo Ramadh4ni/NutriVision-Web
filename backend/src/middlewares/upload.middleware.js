@@ -1,6 +1,17 @@
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
+const os = require("os");
+
+const isProduction = process.env.NODE_ENV === "production";
+
+const uploadDir = isProduction
+  ? path.join(os.tmpdir(), "uploads")
+  : path.join(__dirname, "../../uploads");
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const uploadDir = path.resolve(__dirname, "../../uploads");
 fs.mkdirSync(uploadDir, { recursive: true });
