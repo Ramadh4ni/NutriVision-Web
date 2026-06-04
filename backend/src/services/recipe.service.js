@@ -21,7 +21,13 @@ function listRecipesByScanId(scanId) {
  * @param {string} params.scanSummary - A summary of the user's latest food scan.
  * @returns {Array} An array of recipe recommendation objects.
  */
-function buildRecipeRecommendationsFallback({ userId, goal, scanSummary, scanId = null, recipeCount = 4 }) {
+function buildRecipeRecommendationsFallback({
+  userId,
+  goal,
+  scanSummary,
+  scanId = null,
+  recipeCount = 8,
+}) {
   const templates = [
     {
       title: "Chicken Veggie Power Bowl",
@@ -49,77 +55,83 @@ function buildRecipeRecommendationsFallback({ userId, goal, scanSummary, scanId 
     },
     {
       title: "Shallot and Spinach Quinoa Salad",
-      description: "Refreshing salad combining the sweetness of shallots with nutritious spinach and protein-packed quinoa.",
+      description:
+        "Refreshing salad combining the sweetness of shallots with nutritious spinach and protein-packed quinoa.",
       ingredients: ["shallot", "spinach", "quinoa", "olive oil", "lemon juice"],
       instructions: [
         "Rinse and cook quinoa.",
         "Thinly slice shallots and toss with fresh baby spinach.",
         "Whisk olive oil and lemon juice to make dressing.",
-        "Combine quinoa, salad greens, and dressing, then serve."
+        "Combine quinoa, salad greens, and dressing, then serve.",
       ],
       tags: ["salad", "low-carb"],
       nutrition: { calories: 320, protein: 12, carbs: 45, fat: 12 },
     },
     {
       title: "Garlic Shrimp and Quinoa Bowl",
-      description: "A nutritious bowl filled with succulent garlic shrimp, fluffy quinoa, and vibrant vegetables.",
+      description:
+        "A nutritious bowl filled with succulent garlic shrimp, fluffy quinoa, and vibrant vegetables.",
       ingredients: ["shrimp", "garlic", "quinoa", "bell pepper", "broccoli"],
       instructions: [
         "Cook quinoa according to package instructions.",
         "Sauté minced garlic and shrimp in a pan until pink.",
         "Steam broccoli and bell peppers.",
-        "Assemble the bowl with quinoa base, topped with shrimp and vegetables."
+        "Assemble the bowl with quinoa base, topped with shrimp and vegetables.",
       ],
       tags: ["seafood", "high-protein"],
       nutrition: { calories: 450, protein: 35, carbs: 41, fat: 14 },
     },
     {
       title: "Beef and Broccoli Rice Plate",
-      description: "A classic high-protein stir-fry of tender beef and fresh broccoli over fluffy rice.",
+      description:
+        "A classic high-protein stir-fry of tender beef and fresh broccoli over fluffy rice.",
       ingredients: ["beef", "broccoli", "garlic", "rice", "soy sauce"],
       instructions: [
         "Slice beef into thin strips and marinate in soy sauce and minced garlic.",
         "Cook rice according to package directions.",
         "Stir-fry beef in a hot pan until browned, then add broccoli florets and a splash of water.",
-        "Steam until broccoli is tender-crisp, and serve over rice."
+        "Steam until broccoli is tender-crisp, and serve over rice.",
       ],
       tags: ["beef", "high-protein"],
       nutrition: { calories: 550, protein: 38, carbs: 55, fat: 16 },
     },
     {
       title: "Chili Tomato Salmon",
-      description: "Pan-seared salmon fillet topped with a spicy chili tomato relish.",
+      description:
+        "Pan-seared salmon fillet topped with a spicy chili tomato relish.",
       ingredients: ["fish", "tomato", "chili", "onion", "lime juice"],
       instructions: [
         "Season salmon fillet with salt, pepper, and lime juice.",
         "Sear salmon in a hot pan for 4-5 minutes on each side.",
         "Sauté diced tomatoes, chopped onions, and sliced chilis in olive oil to create a relish.",
-        "Spoon relish over salmon and serve."
+        "Spoon relish over salmon and serve.",
       ],
       tags: ["fish", "seafood", "spicy"],
       nutrition: { calories: 420, protein: 34, carbs: 12, fat: 22 },
     },
     {
       title: "Healthy Egg and Cucumber Salad",
-      description: "A light and fresh salad featuring hard-boiled eggs and crisp cucumbers.",
+      description:
+        "A light and fresh salad featuring hard-boiled eggs and crisp cucumbers.",
       ingredients: ["egg", "cucumber", "greek yogurt", "dill", "lemon juice"],
       instructions: [
         "Hard-boil the eggs, peel them, and chop them into cubes.",
         "Slice cucumber into thin half-moons.",
         "In a bowl, mix greek yogurt, lemon juice, chopped dill, salt, and pepper.",
-        "Fold egg and cucumber into the dressing, chill, and serve."
+        "Fold egg and cucumber into the dressing, chill, and serve.",
       ],
       tags: ["egg", "vegetarian", "low-carb"],
       nutrition: { calories: 280, protein: 18, carbs: 8, fat: 19 },
     },
     {
       title: "Fresh Banana Oatmeal Bowl",
-      description: "Warm, satisfying oatmeal topped with fresh banana slices and a pinch of cinnamon.",
+      description:
+        "Warm, satisfying oatmeal topped with fresh banana slices and a pinch of cinnamon.",
       ingredients: ["banana", "oats", "almond milk", "honey", "cinnamon"],
       instructions: [
         "Cook oats with almond milk until creamy.",
         "Slice banana into rounds.",
-        "Pour oatmeal into a bowl, top with banana slices, drizzle with honey, and sprinkle with cinnamon."
+        "Pour oatmeal into a bowl, top with banana slices, drizzle with honey, and sprinkle with cinnamon.",
       ],
       tags: ["banana", "breakfast", "sweet"],
       nutrition: { calories: 340, protein: 9, carbs: 62, fat: 5 },
@@ -151,7 +163,7 @@ async function buildRecipeRecommendations({
   scanSummary,
   profile,
   scanId = null,
-  recipeCount = 4,
+  recipeCount = 8,
 }) {
   try {
     const aiRecipes = await generateRecipeRecommendationsLLM({
@@ -162,7 +174,13 @@ async function buildRecipeRecommendations({
     });
 
     if (aiRecipes.length === 0) {
-      return buildRecipeRecommendationsFallback({ userId, goal, scanSummary, scanId, recipeCount });
+      return buildRecipeRecommendationsFallback({
+        userId,
+        goal,
+        scanSummary,
+        scanId,
+        recipeCount,
+      });
     }
 
     return aiRecipes.map((recipe) => ({
@@ -187,7 +205,13 @@ async function buildRecipeRecommendations({
       updatedAt: new Date().toISOString(),
     }));
   } catch (_error) {
-    return buildRecipeRecommendationsFallback({ userId, goal, scanSummary, scanId, recipeCount });
+    return buildRecipeRecommendationsFallback({
+      userId,
+      goal,
+      scanSummary,
+      scanId,
+      recipeCount,
+    });
   }
 }
 
@@ -200,16 +224,18 @@ async function saveGeneratedRecipes(recipes) {
   if (!recipes || recipes.length === 0) return [];
   const userId = recipes[0].userId;
   const existing = await findRecipesByUserId(userId);
-  
+
   const saved = [];
   for (const recipe of recipes) {
     const duplicate = existing.find(
-      (r) => r.title.trim().toLowerCase() === recipe.title.trim().toLowerCase()
+      (r) => r.title.trim().toLowerCase() === recipe.title.trim().toLowerCase(),
     );
-    
+
     if (duplicate) {
       // Update scanId of the existing recipe to associate it with the current scan
-      const updated = await updateRecipe(duplicate.id, { scanId: recipe.scanId });
+      const updated = await updateRecipe(duplicate.id, {
+        scanId: recipe.scanId,
+      });
       saved.push(updated);
     } else {
       // Create new recipe if it does not exist
@@ -224,7 +250,7 @@ async function saveGeneratedRecipes(recipes) {
           instructions: recipe.instructions,
           nutritionJson: recipe.nutrition,
           source: recipe.source,
-        }
+        },
       ]);
       saved.push(createdList[0]);
     }

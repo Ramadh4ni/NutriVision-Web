@@ -12,40 +12,40 @@ const { NUTRITION_MAP } = require("../constants/nutrition-map");
  * @returns {Promise<Object>} A promise resolving to the detected food items and their probabilities.
  */
 async function detectFoodItems(imagePath) {
-  // 1. Try stand-alone FastAPI AI service (port 8000 by default)
-  try {
-    const aiUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
-    const fileBuffer = fs.readFileSync(imagePath);
-    const blob = new Blob([fileBuffer]);
-    const formData = new FormData();
-    formData.append("file", blob, path.basename(imagePath));
+  // // 1. Try stand-alone FastAPI AI service (port 8000 by default)
+  // try {
+  //   const aiUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
+  //   const fileBuffer = fs.readFileSync(imagePath);
+  //   const blob = new Blob([fileBuffer]);
+  //   const formData = new FormData();
+  //   formData.append("file", blob, path.basename(imagePath));
 
-    const response = await fetch(`${aiUrl}/predict`, {
-      method: "POST",
-      body: formData,
-    });
+  //   const response = await fetch(`${aiUrl}/predict`, {
+  //     method: "POST",
+  //     body: formData,
+  //   });
 
-    if (response.ok) {
-      const data = await response.json();
-      const confidence = (data.confidence || 0) / 100; // API returns 0-100%, map to 0-1
-      const label = data.food_name || FOOD_LABELS[data.class_index] || "unknown";
+  //   if (response.ok) {
+  //     const data = await response.json();
+  //     const confidence = (data.confidence || 0) / 100; // API returns 0-100%, map to 0-1
+  //     const label = data.food_name || FOOD_LABELS[data.class_index] || "unknown";
 
-      console.log(`[AI Standalone Service] Success prediction: ${label} (${data.confidence}%)`);
-      return {
-        predictedIndex: data.class_index,
-        detectedItems: [label],
-        confidence: confidence,
-        probabilities: [],
-      };
-    }
-  } catch (error) {
-    console.log("[AI Standalone Service] Standalone API not available or error occurred. Falling back to local python script execution...");
-  }
+  //     console.log(`[AI Standalone Service] Success prediction: ${label} (${data.confidence}%)`);
+  //     return {
+  //       predictedIndex: data.class_index,
+  //       detectedItems: [label],
+  //       confidence: confidence,
+  //       probabilities: [],
+  //     };
+  //   }
+  // } catch (error) {
+  //   console.log("[AI Standalone Service] Standalone API not available or error occurred. Falling back to local python script execution...");
+  // }
 
-  // 2. Fallback to child-process script execution
+  // // 2. Fallback to child-process script execution
   return new Promise((resolve, reject) => {
     const scriptPath = path.resolve(__dirname, "../python/predict_food.py");
-    const modelDir = env.MODEL_DIR; // Path to the directory containing the model files
+    const modelDir = env.MODEL_DIR;
     const args = [
       scriptPath,
       "--model-dir",
