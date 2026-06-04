@@ -39,7 +39,7 @@ export default function Recommendation() {
       setPageError("");
 
       try {
-        await generateRecommendations(profile?.goal);
+        await generateRecommendations(profile?.goal, lastScan.id);
         await refreshUserData();
         if (isMounted) {
           setGeneratedForScanId(lastScan.id);

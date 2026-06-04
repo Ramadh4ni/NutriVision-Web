@@ -15,6 +15,8 @@ const {
 async function recommendRecipes(req, res, next) {
   try {
     const profile = await findProfileByUserId(req.user.id);
+
+    const bodyScanId = req.body.scanId;
     const recentScans = await findRecentScansByUserId(req.user.id, 5);
 
     // Fallback to the latest single scan if no scans in the last 5 minutes
@@ -27,8 +29,9 @@ async function recommendRecipes(req, res, next) {
     const allDetectedItems = [
       ...new Set(scansToProcess.flatMap((scan) => scan.detectedItems || [])),
     ];
-    const scanSummary = allDetectedItems.join(", ") || "user nutrition preferences";
-    const latestScanId = scansToProcess[0]?.id || null;
+    const scanSummary =
+      allDetectedItems.join(", ") || "user nutrition preferences";
+    const latestScanId = bodyScanId || scansToProcess[0]?.id || null;
 
     // Check if we already have generated recommendations for this scan ID to prevent LLM duplication and make page reload instant
     if (latestScanId) {
@@ -46,7 +49,7 @@ async function recommendRecipes(req, res, next) {
       .toString()
       .toLowerCase();
 
-    const recipeCount = allDetectedItems.length >= 2 ? 8 : 4;
+    const recipeCount = allDetectedItems.length >= 2 ? 8 : 4; // More items = more recipe ideas
 
     const generatedRecipes = buildRecipeRecommendations({
       userId: req.user.id,

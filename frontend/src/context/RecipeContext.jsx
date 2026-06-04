@@ -47,33 +47,42 @@ export function RecipeProvider({ children }) {
     }
   }, []);
 
-  const generateRecommendations = useCallback(async (goal) => {
-    const response = await recommendRecipes(goal ? { goal } : {});
+  const generateRecommendations = useCallback(async (goal, scanId) => {
+    const response = await recommendRecipes({
+      ...(goal ? { goal } : {}),
+      ...(scanId ? { scanId } : {}),
+    });
     const mapped = response.data.map(mapRecipeFromApi);
     setRecipes((prev) => mergeRecipes(mapped, prev));
     setHistory((prev) => ({ ...prev, ...buildHistoryMap(mapped) }));
     return mapped;
   }, []);
 
-  const toggleSave = useCallback(async (recipeId) => {
-    const target = recipes.find((item) => item.id === recipeId);
-    if (!target) return;
+  const toggleSave = useCallback(
+    async (recipeId) => {
+      const target = recipes.find((item) => item.id === recipeId);
+      if (!target) return;
 
-    if (target.isSaved) {
-      await unsaveRecipe(recipeId);
-    } else {
-      await saveRecipe(recipeId);
-    }
+      if (target.isSaved) {
+        await unsaveRecipe(recipeId);
+      } else {
+        await saveRecipe(recipeId);
+      }
 
-    await loadRecipeHistory();
-    void refreshUserData();
-  }, [recipes, loadRecipeHistory, refreshUserData]);
+      await loadRecipeHistory();
+      void refreshUserData();
+    },
+    [recipes, loadRecipeHistory, refreshUserData],
+  );
 
-  const toggleComplete = useCallback(async (recipeId) => {
-    await markRecipeCooked(recipeId);
-    await loadRecipeHistory();
-    void refreshUserData();
-  }, [loadRecipeHistory, refreshUserData]);
+  const toggleComplete = useCallback(
+    async (recipeId) => {
+      await markRecipeCooked(recipeId);
+      await loadRecipeHistory();
+      void refreshUserData();
+    },
+    [loadRecipeHistory, refreshUserData],
+  );
 
   const viewRecipe = useCallback((recipeId) => {
     setHistory((prev) => ({
@@ -87,10 +96,12 @@ export function RecipeProvider({ children }) {
 
   const getRecipeById = useCallback(
     (id) => recipes.find((item) => item.id === id) || null,
-    [recipes]
+    [recipes],
   );
 
-  const savedRecipes = recipes.filter((item) => item.isSaved).map((item) => item.id);
+  const savedRecipes = recipes
+    .filter((item) => item.isSaved)
+    .map((item) => item.id);
   const completedRecipes = recipes
     .filter((item) => item.isCompleted)
     .map((item) => item.id);
@@ -121,10 +132,12 @@ export function RecipeProvider({ children }) {
       toggleSave,
       toggleComplete,
       getRecipeById,
-    ]
+    ],
   );
 
-  return <RecipeContext.Provider value={value}>{children}</RecipeContext.Provider>;
+  return (
+    <RecipeContext.Provider value={value}>{children}</RecipeContext.Provider>
+  );
 }
 
 function buildHistoryMap(recipes) {
@@ -133,7 +146,9 @@ function buildHistoryMap(recipes) {
       recipeId: recipe.id,
       isSaved: recipe.isSaved,
       isCompleted: recipe.isCompleted,
-      lastActivity: new Date(recipe.updatedAt || recipe.createdAt || Date.now()).getTime(),
+      lastActivity: new Date(
+        recipe.updatedAt || recipe.createdAt || Date.now(),
+      ).getTime(),
     };
     return accumulator;
   }, {});
@@ -144,18 +159,26 @@ function deduplicateRecipesByTitle(recipesList) {
   for (const recipe of recipesList) {
     const key = recipe.title.trim().toLowerCase();
     const existing = map.get(key);
-    
+
     if (!existing) {
       map.set(key, recipe);
     } else {
-      const dateExisting = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
-      const dateCurrent = new Date(recipe.updatedAt || recipe.createdAt || 0).getTime();
-      
-      if (dateCurrent > dateExisting) {
+      const existingScanId = existing.raw?.scanId;
+      const currentScanId = recipe.raw?.scanId;
+
+      if (currentScanId && !existingScanId) {
         map.set(key, recipe);
-      } else if (dateCurrent === dateExisting) {
-        // If dates are equal, prefer the one with scanId (important for recommendation linking)
-        if (recipe.raw?.scanId && !existing.raw?.scanId) {
+      } else if (existingScanId && !currentScanId) {
+        // Keep existing
+      } else {
+        const dateExisting = new Date(
+          existing.updatedAt || existing.createdAt || 0,
+        ).getTime();
+        const dateCurrent = new Date(
+          recipe.updatedAt || recipe.createdAt || 0,
+        ).getTime();
+
+        if (dateCurrent >= dateExisting) {
           map.set(key, recipe);
         }
       }
@@ -164,7 +187,7 @@ function deduplicateRecipesByTitle(recipesList) {
   return Array.from(map.values()).sort(
     (left, right) =>
       new Date(right.updatedAt || right.createdAt || 0).getTime() -
-      new Date(left.updatedAt || left.createdAt || 0).getTime()
+      new Date(left.updatedAt || left.createdAt || 0).getTime(),
   );
 }
 
