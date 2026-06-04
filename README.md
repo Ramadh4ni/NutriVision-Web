@@ -59,7 +59,7 @@ The model is trained on a **combined dataset** of three Kaggle sources, chosen t
 | 1 | Fruit and Vegetable Image Recognition | [Kaggle](https://www.kaggle.com/datasets/kritikseth/fruit-and-vegetable-image-recognition) | General fruits & vegetables, well-labeled with broad class coverage |
 | 2 | Ingredients Bahan Makanan Image | [Kaggle](https://www.kaggle.com/datasets/byrux12/ingredients-bahan-makanan-image-gambar) | Indonesian food ingredients, suitable for local recipe context |
 | 3 | Dataset Bahan Makanan Mentah | [Kaggle](https://www.kaggle.com/datasets/efanfitriyan/dataset-bahan-makanan-mentah) | Raw ingredients with Indonesian labeling, complements dataset #2 |
-| 4 | Combined Dataset (Merged) | [Google Drive]([https://drive.google.com/your-link-here](https://drive.google.com/drive/folders/17Urf2EIInYhWO9mAcsi8sKBdjGNk4byf?usp=sharing)) | Merged result of the three datasets above, ready to use for training |
+| 4 | Combined Dataset (Merged) | [Google Drive](https://drive.google.com/drive/folders/17Urf2EIInYhWO9mAcsi8sKBdjGNk4byf?usp=sharing) | Merged result of the three datasets above, ready to use for training |
 
 > **Why three datasets?**  
 > No single dataset covers both global and Indonesian-local ingredients comprehensively. Merging these three sources improves class diversity and model robustness for the NutriVision use case.
