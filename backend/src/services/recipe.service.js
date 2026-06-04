@@ -5,8 +5,13 @@ const {
   findRecipesByUserId,
   findRecipeByIdForUser,
   updateRecipe,
+  findRecipesByScanId,
 } = require("../repositories/recipe.repository");
 const { generateRecipeRecommendationsLLM } = require("./ai.service");
+
+function listRecipesByScanId(scanId) {
+  return findRecipesByScanId(scanId);
+}
 
 /**
  * Builds recipe recommendations based on the user's goal and scan summary.
@@ -295,4 +300,5 @@ module.exports = {
   listRecipeHistory,
   setRecipeFavorite,
   setRecipeCooked,
+  listRecipesByScanId,
 };

@@ -9,6 +9,7 @@ const {
   listRecipeHistory,
   setRecipeFavorite,
   setRecipeCooked,
+  listRecipesByScanId,
 } = require("../services/recipe.service");
 
 async function recommendRecipes(req, res, next) {
@@ -28,6 +29,18 @@ async function recommendRecipes(req, res, next) {
     ];
     const scanSummary = allDetectedItems.join(", ") || "user nutrition preferences";
     const latestScanId = scansToProcess[0]?.id || null;
+
+    // Check if we already have generated recommendations for this scan ID to prevent LLM duplication and make page reload instant
+    if (latestScanId) {
+      const existingRecipes = await listRecipesByScanId(latestScanId);
+      if (existingRecipes && existingRecipes.length > 0) {
+        return res.status(200).json({
+          success: true,
+          message: "Recipe recommendations retrieved from database.",
+          data: existingRecipes,
+        });
+      }
+    }
 
     const goal = (req.body.goal || profile?.goal || "maintenance")
       .toString()

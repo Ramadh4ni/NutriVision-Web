@@ -3,8 +3,17 @@ import { scanFood as scanFoodRequest } from "../lib/api";
 
 const ScanContext = createContext(null);
 
+const LOCAL_STORAGE_KEY = "nutrivision_last_scan";
+
 export function ScanProvider({ children }) {
-  const [lastScan, setLastScan] = useState(null);
+  const [lastScan, setLastScan] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [scanLoading, setScanLoading] = useState(false);
 
   async function runScan(files) {
@@ -52,8 +61,8 @@ export function ScanProvider({ children }) {
 
       const consolidatedResult = {
         id: lastResult.id,
-        thumbnail: URL.createObjectURL(fileArray[0]), // Thumbnail uses first image
-        thumbnails: fileArray.map((file) => URL.createObjectURL(file)), // Array of thumbnails for rendering stack
+        thumbnail: lastResult.imageUrl, // Use persistent server image URL
+        thumbnails: results.map((r) => r.data.imageUrl), // Array of server image URLs
         photoCount: fileArray.length, // Number of photos processed
         foodName: allDetectedItems.join(", ") || "Detected Ingredients",
         ingredients: allDetectedItems,
@@ -64,6 +73,7 @@ export function ScanProvider({ children }) {
       };
 
       setLastScan(consolidatedResult);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(consolidatedResult));
       return { success: true, data: consolidatedResult };
     } catch (error) {
       return {
@@ -79,8 +89,18 @@ export function ScanProvider({ children }) {
     () => ({
       lastScan,
       scanLoading,
-      saveScan: setLastScan,
-      clearScan: () => setLastScan(null),
+      saveScan: (scan) => {
+        setLastScan(scan);
+        if (scan) {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(scan));
+        } else {
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
+        }
+      },
+      clearScan: () => {
+        setLastScan(null);
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+      },
       runScan,
     }),
     [lastScan, scanLoading]

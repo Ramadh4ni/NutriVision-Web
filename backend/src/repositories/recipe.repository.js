@@ -30,9 +30,16 @@ function updateRecipe(id, data) {
   });
 }
 
+function findRecipesByScanId(scanId) {
+  return prisma.recipe.findMany({
+    where: { scanId },
+  });
+}
+
 module.exports = {
   createManyRecipes,
   findRecipesByUserId,
   findRecipeByIdForUser,
   updateRecipe,
+  findRecipesByScanId,
 };

@@ -40,7 +40,7 @@ export default function ScanPreview({ scan, onScanAgain }) {
       style={{ backgroundColor: '#F8FAFC' }}
     >
       {/* Thumbnail stack */}
-      <div className="flex-shrink-0 relative" style={{ width: 80, height: 80 }}>
+      <div className="flex-shrink-0 relative" style={{ width: 64, height: 64 }}>
         {photoCount === 1 ? (
           <div
             className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-xl lg:rounded-2xl overflow-hidden"

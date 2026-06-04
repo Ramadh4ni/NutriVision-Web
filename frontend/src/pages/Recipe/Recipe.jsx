@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ArrowUpDown, Camera } from 'lucide-react';
+import { Search, ArrowUpDown, Camera, ChevronLeft, ChevronRight } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import RecipeCard from '../../components/cards/RecipeCard';
 import { useRecipe } from '../../context/RecipeContext';
@@ -20,6 +20,7 @@ const sortOptions = [
   { id: 'carbs-high', label: 'Highest Carbs' },
 ];
 
+const ITEMS_PER_PAGE = 6;
 
 export default function Recipe() {
   const navigate = useNavigate();
@@ -35,6 +36,27 @@ export default function Recipe() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [activeSort, setActiveSort] = useState('newest');
   const [sortAscending, setSortAscending] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const handleFilterChange = (filterId) => {
+    setActiveFilter(filterId);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (sortId) => {
+    setActiveSort(sortId);
+    setCurrentPage(1);
+  };
+
+  const handleSortDirectionToggle = () => {
+    setSortAscending((v) => !v);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
 
   const searched = recipes.filter((recipe) => {
     return (
@@ -68,6 +90,13 @@ export default function Recipe() {
     viewRecipe(recipe.id);
     navigate(`/recipe/${recipe.id}`);
   };
+
+  // Pagination Math
+  const totalPages = Math.ceil(sorted.length / ITEMS_PER_PAGE);
+  const paginatedRecipes = sorted.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <DashboardLayout>
@@ -125,7 +154,7 @@ export default function Recipe() {
                   type="text"
                   placeholder="Search recipes..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchChange}
                   className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
                 />
               </div>
@@ -134,7 +163,7 @@ export default function Recipe() {
                 <div className="relative">
                   <select
                     value={activeSort}
-                    onChange={(e) => setActiveSort(e.target.value)}
+                    onChange={(e) => handleSortChange(e.target.value)}
                     className="appearance-none pl-4 pr-10 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
                   >
                     {sortOptions.map((o) => (
@@ -148,7 +177,7 @@ export default function Recipe() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setSortAscending((v) => !v)}
+                  onClick={handleSortDirectionToggle}
                   className="p-2.5 h-[44px] w-[44px] bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center"
                   title={sortAscending ? 'Ascending' : 'Descending'}
                 >
@@ -160,11 +189,11 @@ export default function Recipe() {
               </div>
             </div>
 
-                        <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap">
               {filterOptions.map((filter) => (
                 <button
                   key={filter.id}
-                  onClick={() => setActiveFilter(filter.id)}
+                  onClick={() => handleFilterChange(filter.id)}
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                     activeFilter === filter.id
                       ? 'bg-emerald-600 text-white'
@@ -176,7 +205,7 @@ export default function Recipe() {
               ))}
             </div>
 
-                        <div>
+            <div>
               {sorted.length === 0 ? (
                 <div
                   className="bg-white rounded-2xl p-10 text-center"
@@ -230,7 +259,7 @@ export default function Recipe() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-                    {sorted.map((recipe) => {
+                    {paginatedRecipes.map((recipe) => {
                       return (
                         <div key={recipe.id} className="relative">
                           <RecipeCard
@@ -252,6 +281,48 @@ export default function Recipe() {
                       );
                     })}
                   </div>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 pt-6 mt-8 gap-4">
+                      <div className="text-sm text-slate-500">
+                        Showing <span className="font-semibold text-slate-800">{Math.min(sorted.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)}</span> to{" "}
+                        <span className="font-semibold text-slate-800">{Math.min(sorted.length, currentPage * ITEMS_PER_PAGE)}</span> of{" "}
+                        <span className="font-semibold text-slate-800">{sorted.length}</span> recipes
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        >
+                          <ChevronLeft className="w-5 h-5 text-slate-600" />
+                        </button>
+                        
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${
+                              currentPage === page
+                                ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
+
+                        <button
+                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        >
+                          <ChevronRight className="w-5 h-5 text-slate-600" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
