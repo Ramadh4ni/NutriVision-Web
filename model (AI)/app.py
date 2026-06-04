@@ -17,7 +17,10 @@ app = FastAPI(
 # LOAD MODEL
 # =====================================================
 
-MODEL_PATH = "C:\\Users\\Hype AMD\\Nutrivisonweb\\NutriVision-Web\\model (AI)\\models\\food_saved_model"
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "models", "food_saved_model")
 
 model = tf.saved_model.load(
     MODEL_PATH
@@ -31,8 +34,9 @@ print("✅ Model Loaded")
 # LOAD CLASS NAMES
 # =====================================================
 
+class_names_path = os.path.join(BASE_DIR, "models", "class_names.json")
 with open(
-    "C:\\Users\\Hype AMD\\Nutrivisonweb\\NutriVision-Web\\model (AI)\\models\\class_names.json",
+    class_names_path,
     "r",
     encoding="utf-8"
 ) as f:
