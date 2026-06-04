@@ -60,13 +60,82 @@ export default function LastScanResult({ onScanAgain }) {
       style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        {/* Thumbnail */}
-        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden flex-shrink-0">
-          <img
-            src={resolveImageUrl(lastScan.thumbnail)}
-            alt={lastScan.foodName}
-            className="w-full h-full object-cover"
-          />
+        {/* Thumbnail Stack */}
+        <div className="flex-shrink-0 relative" style={{ width: 64, height: 64 }}>
+          {(lastScan.photoCount || 1) === 1 ? (
+            <div
+              className="w-16 h-16 rounded-xl overflow-hidden"
+              style={{ width: 64, height: 64 }}
+            >
+              <img
+                src={resolveImageUrl(lastScan.thumbnail)}
+                alt="Scanned photo"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div
+              className="relative"
+              style={{ width: 64, height: 64 }}
+            >
+              {/* Back thumbnail (offset) */}
+              {lastScan.thumbnails?.[1] && (
+                <div
+                  className="absolute rounded-xl overflow-hidden"
+                  style={{
+                    width: 52,
+                    height: 52,
+                    top: 6,
+                    left: 0,
+                    border: '2px solid #fff',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                  }}
+                >
+                  <img
+                    src={resolveImageUrl(lastScan.thumbnails[1])}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              {/* Front thumbnail (main) */}
+              <div
+                className="absolute rounded-xl overflow-hidden"
+                style={{
+                  width: 52,
+                  height: 52,
+                  top: 0,
+                  left: 12,
+                  border: '2px solid #fff',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                  zIndex: 1,
+                }}
+              >
+                <img
+                  src={resolveImageUrl(lastScan.thumbnail)}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {/* Photo count badge */}
+              <div
+                className="absolute flex items-center justify-center rounded-full text-white font-bold"
+                style={{
+                  width: 22,
+                  height: 22,
+                  fontSize: 10,
+                  bottom: 0,
+                  right: 0,
+                  background: 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)',
+                  border: '2px solid #fff',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                  zIndex: 2,
+                }}
+              >
+                {lastScan.photoCount}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Info */}

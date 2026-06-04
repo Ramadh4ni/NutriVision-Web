@@ -141,12 +141,25 @@ function buildHistoryMap(recipes) {
 
 function deduplicateRecipesByTitle(recipesList) {
   const map = new Map();
-  // Traverse from oldest to newest (index length-1 down to 0) so that 
-  // newer recipes (which appear first in list since response is desc) overwrite older duplicates
-  for (let i = recipesList.length - 1; i >= 0; i--) {
-    const recipe = recipesList[i];
+  for (const recipe of recipesList) {
     const key = recipe.title.trim().toLowerCase();
-    map.set(key, recipe);
+    const existing = map.get(key);
+    
+    if (!existing) {
+      map.set(key, recipe);
+    } else {
+      const dateExisting = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
+      const dateCurrent = new Date(recipe.updatedAt || recipe.createdAt || 0).getTime();
+      
+      if (dateCurrent > dateExisting) {
+        map.set(key, recipe);
+      } else if (dateCurrent === dateExisting) {
+        // If dates are equal, prefer the one with scanId (important for recommendation linking)
+        if (recipe.raw?.scanId && !existing.raw?.scanId) {
+          map.set(key, recipe);
+        }
+      }
+    }
   }
   return Array.from(map.values()).sort(
     (left, right) =>
