@@ -18,6 +18,7 @@ import Onboarding from "./pages/Onboarding/Onboarding";
 import { RecipeProvider } from "./context/RecipeContext";
 import { UserProvider, useUser } from "./context/UserContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ScanProvider } from "./context/ScanContext";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
@@ -74,86 +75,88 @@ function App() {
   return (
     <AuthProvider>
       <UserProvider>
-        <RecipeProvider>
-          <AuthHydrator />
-          <Router>
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route
-                path="/login"
-                element={
-                  <GuestRoute>
-                    <Login />
-                  </GuestRoute>
-                }
-              />
-              <Route
-                path="/register"
-                element={
-                  <GuestRoute>
-                    <Register />
-                  </GuestRoute>
-                }
-              />
-              <Route
-                path="/onboarding"
-                element={
-                  <OnboardingRoute>
-                    <Onboarding />
-                  </OnboardingRoute>
-                }
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/scan-food"
-                element={
-                  <ProtectedRoute>
-                    <ScanFood />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/recommendation"
-                element={
-                  <ProtectedRoute>
-                    <Recommendation />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/recipes"
-                element={
-                  <ProtectedRoute>
-                    <Recipe />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/recipe/:id"
-                element={
-                  <ProtectedRoute>
-                    <RecipeDetail />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </Router>
-        </RecipeProvider>
+        <ScanProvider>
+          <RecipeProvider>
+            <AuthHydrator />
+            <Router>
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route
+                  path="/login"
+                  element={
+                    <GuestRoute>
+                      <Login />
+                    </GuestRoute>
+                  }
+                />
+                <Route
+                  path="/register"
+                  element={
+                    <GuestRoute>
+                      <Register />
+                    </GuestRoute>
+                  }
+                />
+                <Route
+                  path="/onboarding"
+                  element={
+                    <OnboardingRoute>
+                      <Onboarding />
+                    </OnboardingRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/scan-food"
+                  element={
+                    <ProtectedRoute>
+                      <ScanFood />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/recommendation"
+                  element={
+                    <ProtectedRoute>
+                      <Recommendation />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/recipes"
+                  element={
+                    <ProtectedRoute>
+                      <Recipe />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/recipe/:id"
+                  element={
+                    <ProtectedRoute>
+                      <RecipeDetail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/settings"
+                  element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </Router>
+          </RecipeProvider>
+        </ScanProvider>
       </UserProvider>
     </AuthProvider>
   );

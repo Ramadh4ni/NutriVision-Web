@@ -1,20 +1,28 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState, useEffect } from "react";
 import { scanFood as scanFoodRequest } from "../lib/api";
+import { useAuth } from "./AuthContext";
 
 const ScanContext = createContext(null);
 
-const LOCAL_STORAGE_KEY = "nutrivision_last_scan";
-
 export function ScanProvider({ children }) {
-  const [lastScan, setLastScan] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const { currentUser } = useAuth();
+  const [lastScan, setLastScan] = useState(null);
   const [scanLoading, setScanLoading] = useState(false);
+
+  const storageKey = currentUser ? `nutrivision_last_scan_${currentUser.id}` : null;
+
+  useEffect(() => {
+    if (storageKey) {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        setLastScan(saved ? JSON.parse(saved) : null);
+      } catch {
+        setLastScan(null);
+      }
+    } else {
+      setLastScan(null);
+    }
+  }, [storageKey]);
 
   async function runScan(files) {
     setScanLoading(true);
@@ -73,7 +81,9 @@ export function ScanProvider({ children }) {
       };
 
       setLastScan(consolidatedResult);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(consolidatedResult));
+      if (storageKey) {
+        localStorage.setItem(storageKey, JSON.stringify(consolidatedResult));
+      }
       return { success: true, data: consolidatedResult };
     } catch (error) {
       return {
@@ -91,19 +101,23 @@ export function ScanProvider({ children }) {
       scanLoading,
       saveScan: (scan) => {
         setLastScan(scan);
-        if (scan) {
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(scan));
-        } else {
-          localStorage.removeItem(LOCAL_STORAGE_KEY);
+        if (storageKey) {
+          if (scan) {
+            localStorage.setItem(storageKey, JSON.stringify(scan));
+          } else {
+            localStorage.removeItem(storageKey);
+          }
         }
       },
       clearScan: () => {
         setLastScan(null);
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        if (storageKey) {
+          localStorage.removeItem(storageKey);
+        }
       },
       runScan,
     }),
-    [lastScan, scanLoading]
+    [lastScan, scanLoading, storageKey]
   );
 
   return <ScanContext.Provider value={value}>{children}</ScanContext.Provider>;
