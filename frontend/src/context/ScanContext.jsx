@@ -11,15 +11,16 @@ export function ScanProvider({ children }) {
     setScanLoading(true);
     try {
       const fileArray = Array.isArray(files) ? files : [files];
-      const results = [];
-
-      for (const file of fileArray) {
+      
+      const scanPromises = fileArray.map(async (file) => {
         const response = await scanFoodRequest(file);
-        results.push({
+        return {
           file,
           data: response.data,
-        });
-      }
+        };
+      });
+      
+      const results = await Promise.all(scanPromises);
 
       if (results.length === 0) throw new Error("No files processed.");
 

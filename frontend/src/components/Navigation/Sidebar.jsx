@@ -14,8 +14,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   const menuItems = [
     { name: 'Dashboard', icon: Home, path: '/dashboard' },
     { name: 'Scan Food', icon: Camera, path: '/scan-food' },
-    { name: 'Recipe Guide', icon: BookOpen, path: '/recipe-guide' },
-    { name: 'Recipe History', icon: History, path: '/recipe-history' },
+    { name: 'Recipes', icon: History, path: '/recipes' },
     { name: 'Settings', icon: Settings, path: '/settings' },
   ];
 

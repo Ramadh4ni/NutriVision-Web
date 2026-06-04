@@ -11,9 +11,8 @@ import Register from "./pages/Auth/Register";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import ScanFood from "./pages/ScanFood/ScanFood";
 import Recommendation from "./pages/Recommendation/Recommendation";
-import RecipeGuide from "./pages/RecipeGuide/RecipeGuide";
 import RecipeDetail from "./pages/Recipe/RecipeDetail";
-import RecipeHistory from "./pages/Recipe/RecipeHistory";
+import Recipe from "./pages/Recipe/Recipe";
 import Settings from "./pages/Settings/Settings";
 import Onboarding from "./pages/Onboarding/Onboarding";
 import { RecipeProvider } from "./context/RecipeContext";
@@ -121,14 +120,6 @@ function App() {
                 }
               />
               <Route
-                path="/recipe-guide"
-                element={
-                  <ProtectedRoute>
-                    <RecipeGuide />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/recommendation"
                 element={
                   <ProtectedRoute>
@@ -137,10 +128,10 @@ function App() {
                 }
               />
               <Route
-                path="/recipe-history"
+                path="/recipes"
                 element={
                   <ProtectedRoute>
-                    <RecipeHistory />
+                    <Recipe />
                   </ProtectedRoute>
                 }
               />

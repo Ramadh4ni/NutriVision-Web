@@ -103,7 +103,7 @@ export default function Dashboard() {
               style={{ borderColor: "#F1F5F9" }}
             >
               <button
-                onClick={() => navigate("/recipe-history")}
+                onClick={() => navigate("/recipes")}
                 className="flex items-center gap-1 text-sm font-semibold"
                 style={{ color: "#15803D" }}
               >
@@ -168,7 +168,7 @@ export default function Dashboard() {
               RECENT ACTIVITY
             </h2>
             <button
-              onClick={() => navigate("/recipe-history")}
+              onClick={() => navigate("/recipes")}
               className="flex items-center gap-1 text-xs font-medium tracking-wide"
               style={{ color: "#15803D" }}
             >
@@ -201,7 +201,7 @@ export default function Dashboard() {
                 Start exploring recipes to see your activity here.
               </p>
               <button
-                onClick={() => navigate("/recipe-history")}
+                onClick={() => navigate("/recipes")}
                 className="px-5 py-2.5 rounded-full text-xs font-semibold text-white"
                 style={{ backgroundColor: "#006D37" }}
               >

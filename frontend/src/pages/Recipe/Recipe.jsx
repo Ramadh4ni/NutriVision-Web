@@ -21,7 +21,7 @@ const sortOptions = [
 ];
 
 
-export default function RecipeHistory() {
+export default function Recipe() {
   const navigate = useNavigate();
   const {
     recipes,
@@ -84,7 +84,7 @@ export default function RecipeHistory() {
             className="text-xl sm:text-2xl lg:text-3xl font-bold"
             style={{ color: '#1E293B', letterSpacing: '-0.02em' }}
           >
-            Recipe History
+            My Recipes
           </h2>
         </div>
 
@@ -104,7 +104,7 @@ export default function RecipeHistory() {
               No recipe activity yet
             </h3>
             <p className="text-sm mb-6" style={{ color: '#64748B' }}>
-              Browse recipes, save your favorites, and track meals you have cooked.
+              Scan your food ingredients to automatically generate personalized healthy recipes.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
@@ -112,14 +112,7 @@ export default function RecipeHistory() {
                 className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-all hover:opacity-90"
                 style={{ backgroundColor: '#006D37' }}
               >
-                Scan Food
-              </button>
-              <button
-                onClick={() => navigate('/recipe-guide')}
-                className="px-6 py-3 rounded-full text-sm font-semibold transition-all hover:opacity-90"
-                style={{ backgroundColor: '#F8FAFC', color: '#64748B', border: '1.5px solid #E2E8F0' }}
-              >
-                Browse Recipes
+                Scan Food to Generate
               </button>
             </div>
           </div>
@@ -206,7 +199,7 @@ export default function RecipeHistory() {
                     {searchQuery
                       ? 'Try adjusting your search.'
                       : activeFilter === 'saved'
-                      ? 'Save recipes from the recipe guide or detail page.'
+                      ? 'Save recipes from the recipe detail page.'
                       : activeFilter === 'completed'
                       ? 'Mark recipes as cooked to see them here.'
                       : 'Interact with recipes to populate this section.'}
@@ -218,13 +211,6 @@ export default function RecipeHistory() {
                       style={{ backgroundColor: '#006D37' }}
                     >
                       Scan Food
-                    </button>
-                    <button
-                      onClick={() => navigate('/recipe-guide')}
-                      className="px-6 py-3 rounded-full text-sm font-semibold transition-all hover:opacity-90"
-                      style={{ backgroundColor: '#F8FAFC', color: '#64748B', border: '1.5px solid #E2E8F0' }}
-                    >
-                      Browse Recipes
                     </button>
                   </div>
                 </div>
