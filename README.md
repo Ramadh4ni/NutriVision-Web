@@ -65,6 +65,32 @@ The model is trained on a **combined dataset** of three Kaggle sources, chosen t
 > No single dataset covers both global and Indonesian-local ingredients comprehensively. Merging these three sources improves class diversity and model robustness for the NutriVision use case.
 
 ---
+
+## Model Sharing
+
+Due to GitHub file size limitations, the trained model files are hosted separately on Google Drive.
+
+| Resource | Link |
+|-----------|------|
+| Complete Model Assets | https://drive.google.com/file/d/1liHo__wpEYGSPbXXJUzsD4WL6Np5_x50/view?usp=sharing |
+
+### Model Directory Structure
+
+After downloading the model files, place them inside:
+
+```text
+model (AI)/
+└── models/
+    ├── food_saved_model/
+    └── class_names.json
+```
+
+
+> **Note**
+>
+> Model files are not included in this repository because they exceed GitHub's recommended file size limits. Download all required assets before running the application.
+
+---
 ### Data Preprocessing
 
 All preprocessing steps are documented and reproducible inside the Jupyter Notebook:
