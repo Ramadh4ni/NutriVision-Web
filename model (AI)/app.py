@@ -1,0 +1,1 @@
+print("Use inference/main.py instead")
