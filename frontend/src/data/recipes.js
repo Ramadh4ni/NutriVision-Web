@@ -1,0 +1,737 @@
+export const recipes = [
+  {
+    id: "1",
+    title: "High-Protein Grilled Chicken Bowl",
+    description:
+      "A balanced meal with grilled chicken breast, mixed greens, and quinoa for sustained energy.",
+    protein: 42,
+    carbs: 35,
+    calories: 485,
+    prepTime: "25 min",
+    difficulty: "Easy",
+    badge: "High Protein",
+    category: "High Protein",
+    ingredients: [
+      { name: "Grilled chicken breast", amount: "200g" },
+      { name: "Mixed salad greens", amount: "100g" },
+      { name: "Quinoa", amount: "50g" },
+      { name: "Cherry tomatoes", amount: "80g" },
+      { name: "Cucumber", amount: "50g" },
+      { name: "Avocado slices", amount: "30g" },
+      { name: "Olive oil dressing", amount: "2 tbsp" },
+      { name: "Lemon juice", amount: "1 tbsp" },
+      { name: "Salt and pepper", amount: "to taste" },
+    ],
+    steps: [
+      {
+        step: 1,
+        title: "Season the chicken",
+        description:
+          "Season chicken breast with salt, pepper, and a pinch of paprika. Let it rest at room temperature for 10 minutes.",
+      },
+      {
+        step: 2,
+        title: "Grill the chicken",
+        description:
+          "Heat a grill pan over medium-high heat. Grill chicken for 5-7 minutes per side until internal temp reaches 74°C.",
+      },
+      {
+        step: 3,
+        title: "Cook the quinoa",
+        description:
+          "Rinse quinoa thoroughly. Combine with water (1:2 ratio) and simmer for 15 minutes until fluffy. Fluff with a fork.",
+      },
+      {
+        step: 4,
+        title: "Prepare the greens",
+        description:
+          "Wash and dry mixed greens. Halve cherry tomatoes and slice cucumber into half-moons. Keep dressing separate.",
+      },
+      {
+        step: 5,
+        title: "Assemble and serve",
+        description:
+          "Slice grilled chicken. Arrange greens on a plate, top with quinoa, add chicken slices and avocado. Drizzle with olive oil and lemon.",
+      },
+    ],
+    macros: [
+      {
+        label: "Protein",
+        value: 42,
+        max: 50,
+        unit: "g",
+        color: "#3B82F6",
+        ring: "#BFDBFE",
+      },
+      {
+        label: "Carbohydrates",
+        value: 35,
+        max: 60,
+        unit: "g",
+        color: "#A855F7",
+        ring: "#E9D5FF",
+      },
+      {
+        label: "Fat",
+        value: 18,
+        max: 44,
+        unit: "g",
+        color: "#F59E0B",
+        ring: "#FDE68A",
+      },
+      {
+        label: "Fiber",
+        value: 8,
+        max: 25,
+        unit: "g",
+        color: "#16A34A",
+        ring: "#BBF7D0",
+      },
+      {
+        label: "Calories",
+        value: 485,
+        max: 600,
+        unit: "kcal",
+        color: "#F97316",
+        ring: "#FED7AA",
+      },
+    ],
+  },
+  {
+    id: "2",
+    title: "Mediterranean Veggie Wrap",
+    description:
+      "Fresh vegetables wrapped in whole wheat tortilla with hummus and feta cheese.",
+    protein: 18,
+    carbs: 45,
+    calories: 380,
+    prepTime: "15 min",
+    difficulty: "Easy",
+    badge: "Vegetarian",
+    category: "Vegetarian",
+    ingredients: [
+      { name: "Whole wheat tortilla", amount: "1 large" },
+      { name: "Hummus", amount: "3 tbsp" },
+      { name: "Mixed greens", amount: "80g" },
+      { name: "Feta cheese", amount: "40g" },
+      { name: "Cucumber", amount: "50g" },
+      { name: "Red onion", amount: "30g" },
+      { name: "Cherry tomatoes", amount: "60g" },
+      { name: "Kalamata olives", amount: "20g" },
+    ],
+    steps: [
+      {
+        step: 1,
+        title: "Prep the vegetables",
+        description:
+          "Wash and slice cucumber, red onion, and halve cherry tomatoes. Crumble feta cheese.",
+      },
+      {
+        step: 2,
+        title: "Spread the hummus",
+        description:
+          "Warm the tortilla slightly. Evenly spread hummus across the entire surface.",
+      },
+      {
+        step: 3,
+        title: "Layer the fillings",
+        description:
+          "Arrange mixed greens, feta, cucumber, onion, tomatoes, and olives in the center.",
+      },
+      {
+        step: 4,
+        title: "Roll tightly",
+        description:
+          "Fold the sides in first, then roll from the bottom up tightly. Cut diagonally if desired.",
+      },
+    ],
+    macros: [
+      {
+        label: "Protein",
+        value: 18,
+        max: 50,
+        unit: "g",
+        color: "#3B82F6",
+        ring: "#BFDBFE",
+      },
+      {
+        label: "Carbohydrates",
+        value: 45,
+        max: 60,
+        unit: "g",
+        color: "#A855F7",
+        ring: "#E9D5FF",
+      },
+      {
+        label: "Fat",
+        value: 14,
+        max: 44,
+        unit: "g",
+        color: "#F59E0B",
+        ring: "#FDE68A",
+      },
+      {
+        label: "Fiber",
+        value: 9,
+        max: 25,
+        unit: "g",
+        color: "#16A34A",
+        ring: "#BBF7D0",
+      },
+      {
+        label: "Calories",
+        value: 380,
+        max: 600,
+        unit: "kcal",
+        color: "#F97316",
+        ring: "#FED7AA",
+      },
+    ],
+  },
+  {
+    id: "3",
+    title: "Salmon with Roasted Vegetables",
+    description:
+      "Omega-3 rich salmon fillet paired with seasonal roasted vegetables and lemon drizzle.",
+    protein: 38,
+    carbs: 22,
+    calories: 520,
+    prepTime: "35 min",
+    difficulty: "Medium",
+    badge: "Omega-3",
+    category: "Omega-3",
+    ingredients: [
+      { name: "Salmon fillet", amount: "180g" },
+      { name: "Broccoli florets", amount: "100g" },
+      { name: "Zucchini", amount: "80g" },
+      { name: "Cherry tomatoes", amount: "60g" },
+      { name: "Extra virgin olive oil", amount: "2 tbsp" },
+      { name: "Lemon", amount: "1" },
+      { name: "Garlic cloves", amount: "2" },
+      { name: "Fresh dill", amount: "1 tbsp" },
+    ],
+    steps: [
+      {
+        step: 1,
+        title: "Preheat the oven",
+        description:
+          "Preheat oven to 200°C (400°F). Line a baking sheet with parchment paper.",
+      },
+      {
+        step: 2,
+        title: "Season and roast vegetables",
+        description:
+          "Toss broccoli, zucchini, and tomatoes with olive oil, garlic, salt, and pepper. Spread on baking sheet.",
+      },
+      {
+        step: 3,
+        title: "Add salmon",
+        description:
+          "Place salmon fillet on the same sheet. Drizzle with lemon juice and dill. Roast for 15-18 minutes.",
+      },
+      {
+        step: 4,
+        title: "Rest and serve",
+        description:
+          "Let salmon rest for 2 minutes. Plate with roasted vegetables and a lemon wedge.",
+      },
+    ],
+    macros: [
+      {
+        label: "Protein",
+        value: 38,
+        max: 50,
+        unit: "g",
+        color: "#3B82F6",
+        ring: "#BFDBFE",
+      },
+      {
+        label: "Carbohydrates",
+        value: 22,
+        max: 60,
+        unit: "g",
+        color: "#A855F7",
+        ring: "#E9D5FF",
+      },
+      {
+        label: "Fat",
+        value: 28,
+        max: 44,
+        unit: "g",
+        color: "#F59E0B",
+        ring: "#FDE68A",
+      },
+      {
+        label: "Fiber",
+        value: 6,
+        max: 25,
+        unit: "g",
+        color: "#16A34A",
+        ring: "#BBF7D0",
+      },
+      {
+        label: "Calories",
+        value: 520,
+        max: 600,
+        unit: "kcal",
+        color: "#F97316",
+        ring: "#FED7AA",
+      },
+    ],
+  },
+  {
+    id: "4",
+    title: "Quinoa Buddha Bowl",
+    description:
+      "Colorful bowl featuring quinoa, avocado, chickpeas, and tahini dressing.",
+    protein: 22,
+    carbs: 55,
+    calories: 450,
+    prepTime: "20 min",
+    difficulty: "Easy",
+    badge: null,
+    category: "Balanced",
+    ingredients: [
+      { name: "Cooked quinoa", amount: "150g" },
+      { name: "Chickpeas", amount: "100g" },
+      { name: "Avocado", amount: "Half" },
+      { name: "Roasted sweet potato", amount: "100g" },
+      { name: "Kale leaves", amount: "60g" },
+      { name: "Tahini", amount: "2 tbsp" },
+      { name: "Lemon juice", amount: "1 tbsp" },
+      { name: "Sesame seeds", amount: "1 tsp" },
+    ],
+    steps: [
+      {
+        step: 1,
+        title: "Prepare the base",
+        description: "Arrange quinoa as the base in a wide bowl.",
+      },
+      {
+        step: 2,
+        title: "Arrange toppings",
+        description:
+          "Place chickpeas, diced sweet potato, sliced avocado, and kale around the quinoa.",
+      },
+      {
+        step: 3,
+        title: "Make tahini dressing",
+        description:
+          "Whisk tahini with lemon juice and 2 tbsp water until smooth and pourable.",
+      },
+      {
+        step: 4,
+        title: "Drizzle and serve",
+        description:
+          "Drizzle tahini dressing over the bowl. Sprinkle with sesame seeds.",
+      },
+    ],
+    macros: [
+      {
+        label: "Protein",
+        value: 22,
+        max: 50,
+        unit: "g",
+        color: "#3B82F6",
+        ring: "#BFDBFE",
+      },
+      {
+        label: "Carbohydrates",
+        value: 55,
+        max: 60,
+        unit: "g",
+        color: "#A855F7",
+        ring: "#E9D5FF",
+      },
+      {
+        label: "Fat",
+        value: 16,
+        max: 44,
+        unit: "g",
+        color: "#F59E0B",
+        ring: "#FDE68A",
+      },
+      {
+        label: "Fiber",
+        value: 12,
+        max: 25,
+        unit: "g",
+        color: "#16A34A",
+        ring: "#BBF7D0",
+      },
+      {
+        label: "Calories",
+        value: 450,
+        max: 600,
+        unit: "kcal",
+        color: "#F97316",
+        ring: "#FED7AA",
+      },
+    ],
+  },
+  {
+    id: "5",
+    title: "Turkey Stuffed Bell Peppers",
+    description:
+      "Bell peppers filled with lean ground turkey, brown rice, and Italian herbs.",
+    protein: 35,
+    carbs: 38,
+    calories: 420,
+    prepTime: "40 min",
+    difficulty: "Medium",
+    badge: "Low Carb",
+    category: "Low Carb",
+    ingredients: [
+      { name: "Bell peppers", amount: "4 medium" },
+      { name: "Lean ground turkey", amount: "300g" },
+      { name: "Cooked brown rice", amount: "100g" },
+      { name: "Diced tomatoes", amount: "200g" },
+      { name: "Mozzarella cheese", amount: "60g" },
+      { name: "Italian seasoning", amount: "1 tsp" },
+      { name: "Garlic", amount: "2 cloves" },
+      { name: "Olive oil", amount: "1 tbsp" },
+    ],
+    steps: [
+      {
+        step: 1,
+        title: "Prep peppers",
+        description:
+          "Cut tops off bell peppers and remove seeds. Brush outside with olive oil.",
+      },
+      {
+        step: 2,
+        title: "Cook filling",
+        description:
+          "Brown turkey in a pan, breaking it apart. Add garlic, tomatoes, rice, and Italian seasoning. Simmer for 10 minutes.",
+      },
+      {
+        step: 3,
+        title: "Stuff peppers",
+        description:
+          "Fill each pepper generously with the turkey mixture. Top with mozzarella.",
+      },
+      {
+        step: 4,
+        title: "Bake",
+        description:
+          "Place in a baking dish with a splash of water. Cover with foil and bake at 190°C for 25 minutes. Uncover and bake 5 more minutes.",
+      },
+    ],
+    macros: [
+      {
+        label: "Protein",
+        value: 35,
+        max: 50,
+        unit: "g",
+        color: "#3B82F6",
+        ring: "#BFDBFE",
+      },
+      {
+        label: "Carbohydrates",
+        value: 38,
+        max: 60,
+        unit: "g",
+        color: "#A855F7",
+        ring: "#E9D5FF",
+      },
+      {
+        label: "Fat",
+        value: 14,
+        max: 44,
+        unit: "g",
+        color: "#F59E0B",
+        ring: "#FDE68A",
+      },
+      {
+        label: "Fiber",
+        value: 7,
+        max: 25,
+        unit: "g",
+        color: "#16A34A",
+        ring: "#BBF7D0",
+      },
+      {
+        label: "Calories",
+        value: 420,
+        max: 600,
+        unit: "kcal",
+        color: "#F97316",
+        ring: "#FED7AA",
+      },
+    ],
+  },
+  {
+    id: "6",
+    title: "Tuna Poke Bowl",
+    description:
+      "Fresh tuna cubes over sushi rice with edamame, seaweed, and wasabi mayo.",
+    protein: 32,
+    carbs: 42,
+    calories: 465,
+    prepTime: "18 min",
+    difficulty: "Easy",
+    badge: null,
+    category: "Seafood",
+    ingredients: [
+      { name: "Sushi-grade tuna", amount: "150g" },
+      { name: "Sushi rice", amount: "120g" },
+      { name: "Edamame", amount: "60g" },
+      { name: "Seaweed salad", amount: "30g" },
+      { name: "Cucumber", amount: "50g" },
+      { name: "Wasabi mayo", amount: "2 tbsp" },
+      { name: "Soy sauce", amount: "1 tbsp" },
+      { name: "Sesame seeds", amount: "1 tsp" },
+    ],
+    steps: [
+      {
+        step: 1,
+        title: "Prepare rice",
+        description:
+          "Rinse sushi rice and cook per package. Season with rice vinegar, sugar, and salt. Let cool.",
+      },
+      {
+        step: 2,
+        title: "Cube the tuna",
+        description: "Cut tuna into 1-inch cubes. Toss lightly with soy sauce.",
+      },
+      {
+        step: 3,
+        title: "Prep toppings",
+        description:
+          "Slice cucumber. Thaw edamame. Mix seaweed salad with a touch of sesame oil.",
+      },
+      {
+        step: 4,
+        title: "Assemble bowl",
+        description:
+          "Layer rice in a bowl. Arrange tuna, edamame, cucumber, and seaweed. Drizzle wasabi mayo and scatter sesame seeds.",
+      },
+    ],
+    macros: [
+      {
+        label: "Protein",
+        value: 32,
+        max: 50,
+        unit: "g",
+        color: "#3B82F6",
+        ring: "#BFDBFE",
+      },
+      {
+        label: "Carbohydrates",
+        value: 42,
+        max: 60,
+        unit: "g",
+        color: "#A855F7",
+        ring: "#E9D5FF",
+      },
+      {
+        label: "Fat",
+        value: 12,
+        max: 44,
+        unit: "g",
+        color: "#F59E0B",
+        ring: "#FDE68A",
+      },
+      {
+        label: "Fiber",
+        value: 5,
+        max: 25,
+        unit: "g",
+        color: "#16A34A",
+        ring: "#BBF7D0",
+      },
+      {
+        label: "Calories",
+        value: 465,
+        max: 600,
+        unit: "kcal",
+        color: "#F97316",
+        ring: "#FED7AA",
+      },
+    ],
+  },
+  {
+    id: "7",
+    title: "Avocado Toast with Eggs",
+    description:
+      "Creamy avocado on whole grain toast topped with poached eggs and microgreens.",
+    protein: 25,
+    carbs: 32,
+    calories: 390,
+    prepTime: "12 min",
+    difficulty: "Easy",
+    badge: null,
+    category: "Breakfast",
+    ingredients: [
+      { name: "Whole grain bread", amount: "2 slices" },
+      { name: "Ripe avocado", amount: "1 medium" },
+      { name: "Eggs", amount: "2 large" },
+      { name: "Microgreens", amount: "20g" },
+      { name: "Cherry tomatoes", amount: "50g" },
+      { name: "Red pepper flakes", amount: "a pinch" },
+      { name: "Lemon juice", amount: "1 tsp" },
+      { name: "Salt and pepper", amount: "to taste" },
+    ],
+    steps: [
+      {
+        step: 1,
+        title: "Toast the bread",
+        description: "Toast bread until golden and crispy on both sides.",
+      },
+      {
+        step: 2,
+        title: "Prepare avocado",
+        description:
+          "Mash avocado with lemon juice, salt, and pepper. Spread generously on toast.",
+      },
+      {
+        step: 3,
+        title: "Poach the eggs",
+        description:
+          "Bring a pot of water to a gentle simmer. Create a gentle whirlpool and slip in eggs one at a time. Poach for 3 minutes.",
+      },
+      {
+        step: 4,
+        title: "Assemble and serve",
+        description:
+          "Place poached eggs on avocado toast. Top with halved cherry tomatoes, microgreens, and red pepper flakes.",
+      },
+    ],
+    macros: [
+      {
+        label: "Protein",
+        value: 25,
+        max: 50,
+        unit: "g",
+        color: "#3B82F6",
+        ring: "#BFDBFE",
+      },
+      {
+        label: "Carbohydrates",
+        value: 32,
+        max: 60,
+        unit: "g",
+        color: "#A855F7",
+        ring: "#E9D5FF",
+      },
+      {
+        label: "Fat",
+        value: 20,
+        max: 44,
+        unit: "g",
+        color: "#F59E0B",
+        ring: "#FDE68A",
+      },
+      {
+        label: "Fiber",
+        value: 8,
+        max: 25,
+        unit: "g",
+        color: "#16A34A",
+        ring: "#BBF7D0",
+      },
+      {
+        label: "Calories",
+        value: 390,
+        max: 600,
+        unit: "kcal",
+        color: "#F97316",
+        ring: "#FED7AA",
+      },
+    ],
+  },
+  {
+    id: "8",
+    title: "Steak with Sweet Potato",
+    description:
+      "Grilled sirloin steak served with roasted sweet potato wedges and garlic butter.",
+    protein: 45,
+    carbs: 40,
+    calories: 580,
+    prepTime: "30 min",
+    difficulty: "Medium",
+    badge: "High Protein",
+    category: "High Protein",
+    ingredients: [
+      { name: "Sirloin steak", amount: "200g" },
+      { name: "Sweet potato", amount: "200g" },
+      { name: "Butter", amount: "2 tbsp" },
+      { name: "Garlic cloves", amount: "3" },
+      { name: "Fresh rosemary", amount: "2 sprigs" },
+      { name: "Olive oil", amount: "1 tbsp" },
+      { name: "Salt and pepper", amount: "to taste" },
+    ],
+    steps: [
+      {
+        step: 1,
+        title: "Prep sweet potato",
+        description:
+          "Cut sweet potato into wedges. Toss with olive oil, salt, and pepper. Spread on baking sheet.",
+      },
+      {
+        step: 2,
+        title: "Start roasting",
+        description:
+          "Roast sweet potato wedges at 200°C for 15 minutes before adding steak.",
+      },
+      {
+        step: 3,
+        title: "Sear the steak",
+        description:
+          "Season steak generously. Sear in a hot pan 3-4 minutes per side. Add butter, garlic, and rosemary. Baste for 2 minutes.",
+      },
+      {
+        step: 4,
+        title: "Rest and plate",
+        description:
+          "Rest steak for 5 minutes. Slice against the grain. Serve with sweet potato wedges and pan juices.",
+      },
+    ],
+    macros: [
+      {
+        label: "Protein",
+        value: 45,
+        max: 50,
+        unit: "g",
+        color: "#3B82F6",
+        ring: "#BFDBFE",
+      },
+      {
+        label: "Carbohydrates",
+        value: 40,
+        max: 60,
+        unit: "g",
+        color: "#A855F7",
+        ring: "#E9D5FF",
+      },
+      {
+        label: "Fat",
+        value: 24,
+        max: 44,
+        unit: "g",
+        color: "#F59E0B",
+        ring: "#FDE68A",
+      },
+      {
+        label: "Fiber",
+        value: 6,
+        max: 25,
+        unit: "g",
+        color: "#16A34A",
+        ring: "#BBF7D0",
+      },
+      {
+        label: "Calories",
+        value: 580,
+        max: 600,
+        unit: "kcal",
+        color: "#F97316",
+        ring: "#FED7AA",
+      },
+    ],
+  },
+];
+
+export function getRecipeById(id) {
+  return recipes.find((r) => r.id === id) || null;
+}
